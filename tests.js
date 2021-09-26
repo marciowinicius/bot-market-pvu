@@ -19,11 +19,35 @@ const PRICE_PVU_OUT = 500
 const MONTH_HOURS = 720
 const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'
 
-const NodeCache = require( "node-cache" );
+const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
+// const myContract = new web3.eth.Contract(abi, address);
+//
+// let options = {
+//     // filter: {
+//     //     value: ['1000', '1337']    //Only get events where transfer value was 1000 or 1337
+//     // },
+//     fromBlock: 0,                  //Number || "earliest" || "pending" || "latest"
+//     toBlock: 'latest'
+// };
+//
+// myContract.getPastEvents('Create Sale Auction', options)
+//     .then(results => console.log(results))
+//     .catch(err => console.log('test eerr', err));
+
+// async function test() {
+//     web3.eth.getBlock("latest").then(res => {
+//         console.log(res.gasLimit / res.transactions.length);
+//     });
+// }
+//
+// test()
+
 web3.eth.subscribe('logs', {
-    address: address
+    address: address,
+    topics: ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'],
+    fromBlock: "latest"
 }, function (error, result) {
     if (!error) {
         let cache = myCache.get("transaction_" + result.transactionHash);
@@ -45,7 +69,7 @@ web3.eth.subscribe('logs', {
 async function processInput(input) {
     const decodedData = abiDecoder.decodeMethod(input);
 
-    if (typeof decodedData.params == 'undefined' && decodedData.params == null){
+    if (typeof decodedData.params == 'undefined' && decodedData.params == null) {
         return
     }
 
@@ -136,7 +160,6 @@ const getPlantInformations = async function (plantId, price, tokenId) {
 
     savePvuDataInformation(informations)
 }
-
 
 
 async function getBasePriceByElement(element) {

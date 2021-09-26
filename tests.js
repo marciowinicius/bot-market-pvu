@@ -7,7 +7,7 @@ const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f
 const abiDecoder = require('abi-decoder');
 const abi = require("./abi.json");
 abiDecoder.addABI(abi);
-const address = '0x5ab19e7091dd208f352f8e727b6dcc6f8abb6275'
+const address = process.env.CONTRACT_ADDRESS
 
 const {Webhook, MessageBuilder} = require('discord-webhook-node');
 
@@ -22,17 +22,56 @@ const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84
 const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
+// async function test() {
+//     let block = await web3.eth.getBlock('latest');
+//
+//     if (block != null && block.transactions != null) {
+//         for (let txHash of block.transactions) {
+//             let tx = await web3.eth.getTransaction(txHash);
+//
+//             if (tx != null && address == tx.to.toLowerCase()) {
+//                 const decodedData = abiDecoder.decodeMethod(tx.input);
+//                 console.log(tx, decodedData);
+//             }
+//         }
+//     }
+// }
+//
+// setInterval(() => {
+//     test();
+// }, 5 * 1000);
+
+
+web3.eth.subscribe('pendingTransactions', (err, txHash) => {
+    if (err) throw(err);
+}).on("data", function (txHash) {
+    web3.eth.getTransaction(txHash, (err, transaction) => {
+        if (transaction) {
+            let cache = myCache.get("transaction_" + transaction.hash);
+            if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
+                console.log(transaction.hash)
+                myCache.set("transaction_" + transaction.hash, true, 10000)
+
+                processInput(transaction.input).catch(r => {
+                    console.log("DEU RUIM")
+                })
+            }
+        }
+    })
+});
+
 // const myContract = new web3.eth.Contract(abi, address);
 //
+//
 // let options = {
-//     // filter: {
-//     //     value: ['1000', '1337']    //Only get events where transfer value was 1000 or 1337
-//     // },
-//     fromBlock: 0,                  //Number || "earliest" || "pending" || "latest"
+//     filter: {
+//         method: "createSaleAuction"    //Only get events where transfer value was 1000 or 1337
+//     },
+//     // fromBlock: 0,                  //Number || "earliest" || "pending" || "latest"
 //     toBlock: 'latest'
 // };
 //
-// myContract.getPastEvents('Create Sale Auction', options)
+// myContract.getPastEvents('Transfer', options)
 //     .then(results => console.log(results))
 //     .catch(err => console.log('test eerr', err));
 
@@ -44,27 +83,50 @@ const myCache = new NodeCache();
 //
 // test()
 
-web3.eth.subscribe('logs', {
-    address: address,
-    topics: ['0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'],
-    fromBlock: "latest"
-}, function (error, result) {
-    if (!error) {
-        let cache = myCache.get("transaction_" + result.transactionHash);
-        if (cache == undefined) {
-            myCache.set( "transaction_" + result.transactionHash, true, 10000)
-            web3.eth.getTransaction(result.transactionHash)
-                .then(data => {
-                    if (typeof result.transactionHash !== 'undefined' && result.transactionHash !== null) {
-                        processInput(data.input).then(r => {
-                        }).catch(r => {
-                            console.log("DEU RUIM")
-                        })
-                    }
-                })
-        }
-    }
-});
+// web3.eth.subscribe('logs', {
+//     address: address,
+//     topics: ['0xa9c8dfcda5664a5a124c713e386da27de87432d5b668e79458501eb296389ba7']
+// }, function (error, result) {
+//     if (!error) {
+//         console.log(result.transactionHash)
+//         // let cache = myCache.get("transaction_" + result.transactionHash);
+//         // if (cache == undefined) {
+//         //     myCache.set( "transaction_" + result.transactionHash, true, 10000)
+//         //     web3.eth.getTransaction(result.transactionHash)
+//         //         .then(data => {
+//         //             if (typeof result.transactionHash !== 'undefined' && result.transactionHash !== null) {
+//         //                 processInput(data.input).then(r => {
+//         //                 }).catch(r => {
+//         //                     console.log("DEU RUIM")
+//         //                 })
+//         //             }
+//         //         })
+//         // }
+//     }
+// });
+
+// web3.eth.subscribe('pendingTransactions', function (error, txHash) {
+//     if (!error) {
+//         let cache = myCache.get("transaction_" + txHash);
+//         if (cache == undefined) {
+//             myCache.set( "transaction_" + txHash, true, 10000)
+//             web3.eth.getTransaction(txHash)
+//                 .then(data => {
+//                     if (data && data.to == '0x926eae99527a9503eadb4c9e927f21f84f20c977'){
+//                         console.log(data)
+//                     } else {
+//                         console.log('test')
+//                     }
+//                     // if (typeof result.transactionHash !== 'undefined' && result.transactionHash !== null) {
+//                     //     processInput(data.input).then(r => {
+//                     //     }).catch(r => {
+//                     //         console.log("DEU RUIM")
+//                     //     })
+//                     // }
+//                 })
+//         }
+//     }
+// });
 
 async function processInput(input) {
     const decodedData = abiDecoder.decodeMethod(input);

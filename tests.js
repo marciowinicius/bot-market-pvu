@@ -21,7 +21,6 @@ const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84
 
 const WEBHOOK_ROI_10_TO_25 = 'https://discord.com/api/webhooks/890627083296972830/QliSZ9WQrTMGUoYBol6RdW-H0Hr6l0kE1Ez1r2KyvnvR9v44Na_uJ-i2AXQZa-eQd7pR'
 const WEBHOOK_ROI_ABOVE_40 = 'https://discord.com/api/webhooks/891442569635037195/eYxKTqbPbPmKtGR8SiLPLUmV2_GNEICywIiMWwGlgQajZEfHuoJ8TGWiybC29OQPYHW6'
-const WEBHOOK_LOWEST_PRICE = 'https://discord.com/api/webhooks/891443308654645308/_s74Ljtd4F-2m9NsvbYX83Udoou9FfoDXBmtJ537SiXZyic51Qp8ZYNIPw_N3dVczPHX'
 const WEBHOOK_LOWEST_PRICE_DARK = 'https://discord.com/api/webhooks/891717089704939520/dOtZLRkP0XvN-dP4MRfn7jz65GAhhVgKxS3-rG9bIYprpcW1-Brzql2GSvasrPN_s7q5'
 const WEBHOOK_LOWEST_PRICE_LIGHT = 'https://discord.com/api/webhooks/891717194260578314/NBFg2dCGVf3H_-Yw1YTNWxdhw0mnthfId0ynNO8PBR4Q55VoPCs_7s04irj6I7H61-wz'
 const WEBHOOK_LOWEST_PRICE_FIRE = 'https://discord.com/api/webhooks/891717307519356998/qsPO2D2-GChuKrY-fFIEK3k6DMt2DBjaWt8mohMG0QuI0CDASWZ-q513RT1jCzezOSMH'
@@ -84,7 +83,6 @@ async function processInput(input) {
     getPlantId(tokenID, price)
 }
 
-
 async function getPvuData(tokenId) {
     return await sequelize
         .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);",
@@ -146,14 +144,30 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         price: price,
     }
 
-    informations = analyzeNFTAndSendDiscord(informations)
+    informations = await analyzeNFTAndSendDiscord(informations)
 
     savePvuDataInformation(informations)
 }
 
 
-function analyzeNFTAndSendDiscord(informations) {
+
+async function getBasePriceByElement(element) {
+    return await sequelize
+        .query("SELECT * FROM pvu_element_prices WHERE element = :element;",
+            {
+                type: QueryTypes.SELECT,
+                plain: true,
+                replacements: {element: element},
+                raw: true
+            }
+        );
+}
+
+
+async function analyzeNFTAndSendDiscord(informations) {
     let webhook = null
+    let basePriceInformation = await getBasePriceByElement(informations.plant_type)
+    let basePrice = basePriceInformation ? basePriceInformation.price : 35
 
     if (informations.status == 1 && informations.hour <= 96 && informations.le_hour >= 10
         && informations.pvu_le_hour_price != 99.00000000 && informations.pvu_price != 99.99999999
@@ -181,7 +195,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
@@ -193,7 +207,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
     ) {
         informations.discord_alert = 1
@@ -205,7 +219,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'FIRE'
     ) {
         informations.discord_alert = 1
@@ -217,7 +231,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WATER'
     ) {
         informations.discord_alert = 1
@@ -229,7 +243,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
     ) {
         informations.discord_alert = 1
@@ -241,7 +255,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
     ) {
         informations.discord_alert = 1
@@ -253,7 +267,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
     ) {
         informations.discord_alert = 1
@@ -265,7 +279,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
     ) {
         informations.discord_alert = 1
@@ -277,7 +291,7 @@ function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'PARASITE'
     ) {
         informations.discord_alert = 1

@@ -179,6 +179,7 @@ function getDefaultDiscordMessage(webhook, informations) {
     let commonOrMother = informations.pvu_type == 1 ? 'COMMON' : 'MOTHER'
     let leHourFixed = informations.le_hour.toFixed(2)
     let grossProfit = leHourFixed * MONTH_HOURS / PRICE_PVU_OUT
+    grossProfit = grossProfit.toFixed(2)
     let monthlyROI = informations.rent * 100
     let monthlyROIFixed = monthlyROI.toFixed(2)
     let message = "PRICE (PVU): " + priceFixed + os.EOL + "TYPE: " + commonOrMother + os.EOL + "ELEMENT: " + informations.plant_type + os.EOL + "RARITY: " + informations.rarity + os.EOL + "LE: " + informations.le + "/" + informations.hour + " " + leHourFixed + " per hour" + os.EOL + "GROSS PROFIT: " + grossProfit + " PVU per month" + os.EOL + "MONTHLY RETURN OF INVESTMENT: " + monthlyROIFixed + "%" + os.EOL + "***(Base calculation " + PRICE_PVU_OUT + ":1 PVU)***" + os.EOL + "URL: " + informations.pvu_url + (webhook.free_trial ? os.EOL : '')

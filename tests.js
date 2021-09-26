@@ -22,43 +22,73 @@ const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84
 const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
-// async function test() {
-//     let block = await web3.eth.getBlock('latest');
+
+function execute() {
+    web3.eth.subscribe('pendingTransactions', (err, txHash) => {
+        if (err) console.log(err);
+    }).on("data", function (txHash) {
+        web3.eth.getTransaction(txHash, (err, transaction) => {
+            if (transaction) {
+                let cache = myCache.get("transaction_" + transaction.hash);
+                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
+                    console.log(transaction.hash)
+                    myCache.set("transaction_" + transaction.hash, true, 10000)
+
+                    processInput(transaction.input).catch(r => {
+                        console.log("DEU RUIM")
+                    })
+                }
+            }
+        })
+    });
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
+// function executeTwo() {
 //
-//     if (block != null && block.transactions != null) {
-//         for (let txHash of block.transactions) {
-//             let tx = await web3.eth.getTransaction(txHash);
+// }
+
+execute()
+// console.log('test999')
+// await execute()
+
+// const contract = new web3.eth.Contract(abi, address)
+
+// web3.eth.getBlockNumber().then(console.log);
+
+// contract.events.Transfer({
+//     // filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
+//     // fromBlock: 11258798
+// }, function(error, event){ console.log(event); })
+//     .on("connected", function(subscriptionId){
+//         console.log(subscriptionId);
+//     })
+//     .on('data', function(event){
+//         console.log(event); // same results as the optional callback above
+//     })
+
+// web3.eth.subscribe('pendingTransactions', (err, txHash) => {
+//     if (err) throw(err);
+// }).on("data", function (txHash) {
+//     web3.eth.getTransaction(txHash, (err, transaction) => {
+//         if (transaction) {
+//             let cache = myCache.get("transaction_" + transaction.hash);
+//             if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
+//                 console.log(transaction.hash)
+//                 myCache.set("transaction_" + transaction.hash, true, 10000)
 //
-//             if (tx != null && address == tx.to.toLowerCase()) {
-//                 const decodedData = abiDecoder.decodeMethod(tx.input);
-//                 console.log(tx, decodedData);
+//                 processInput(transaction.input).catch(r => {
+//                     console.log("DEU RUIM")
+//                 })
 //             }
 //         }
-//     }
-// }
-//
-// setInterval(() => {
-//     test();
-// }, 5 * 1000);
-
-
-web3.eth.subscribe('pendingTransactions', (err, txHash) => {
-    if (err) throw(err);
-}).on("data", function (txHash) {
-    web3.eth.getTransaction(txHash, (err, transaction) => {
-        if (transaction) {
-            let cache = myCache.get("transaction_" + transaction.hash);
-            if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
-                console.log(transaction.hash)
-                myCache.set("transaction_" + transaction.hash, true, 10000)
-
-                processInput(transaction.input).catch(r => {
-                    console.log("DEU RUIM")
-                })
-            }
-        }
-    })
-});
+//     })
+// });
 
 // const myContract = new web3.eth.Contract(abi, address);
 //

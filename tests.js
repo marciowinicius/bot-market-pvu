@@ -21,6 +21,15 @@ const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84
 
 const WEBHOOK_ROI_ABOVE_40 = 'https://discord.com/api/webhooks/891442569635037195/eYxKTqbPbPmKtGR8SiLPLUmV2_GNEICywIiMWwGlgQajZEfHuoJ8TGWiybC29OQPYHW6'
 const WEBHOOK_LOWEST_PRICE = 'https://discord.com/api/webhooks/891443308654645308/_s74Ljtd4F-2m9NsvbYX83Udoou9FfoDXBmtJ537SiXZyic51Qp8ZYNIPw_N3dVczPHX'
+const WEBHOOK_LOWEST_PRICE_DARK = 'https://discord.com/api/webhooks/891717089704939520/dOtZLRkP0XvN-dP4MRfn7jz65GAhhVgKxS3-rG9bIYprpcW1-Brzql2GSvasrPN_s7q5'
+const WEBHOOK_LOWEST_PRICE_LIGHT = 'https://discord.com/api/webhooks/891717194260578314/NBFg2dCGVf3H_-Yw1YTNWxdhw0mnthfId0ynNO8PBR4Q55VoPCs_7s04irj6I7H61-wz'
+const WEBHOOK_LOWEST_PRICE_FIRE = 'https://discord.com/api/webhooks/891717307519356998/qsPO2D2-GChuKrY-fFIEK3k6DMt2DBjaWt8mohMG0QuI0CDASWZ-q513RT1jCzezOSMH'
+const WEBHOOK_LOWEST_PRICE_WATER = 'https://discord.com/api/webhooks/891717408673370152/qqbiwpx5bvf3cdW64cpbCSGHCK9gW0SYRwW40ggg-He84YkzNxCXfi-IegST2wufbMhT'
+const WEBHOOK_LOWEST_PRICE_ICE = 'https://discord.com/api/webhooks/891717497420660746/j9QTGC53wP90AmEwmg41vphAyuVxjPTlhPFbJLPatn3BW0WMQYMsLLQTM9obUH6OBdGl'
+const WEBHOOK_LOWEST_PRICE_ELECTRIC = 'https://discord.com/api/webhooks/891717611644137553/TkATis7-rgB-CCzSj7PjayXLmCix5tBs5508ppnIzL13vzX1uftuio2QJFzG5Ecj3OaN'
+const WEBHOOK_LOWEST_PRICE_METAL = 'https://discord.com/api/webhooks/891726564927086673/VD27MZmcLNbh9nrtOPcdx6oHvfo9zQTN6gutl5rf_hHv2MLNAh1olHTTWH8HhMSRQfFf'
+const WEBHOOK_LOWEST_PRICE_WIND = 'https://discord.com/api/webhooks/891717770629230594/dcc2uBtrEsz7i5DQDGtOOQqMLygrYzSa3si-zD2XmyA18G-4R9SagSsLUqtkW_MlOP0m'
+const WEBHOOK_LOWEST_PRICE_PARASITE = 'https://discord.com/api/webhooks/891717900547817492/ckb0wHEjoxPlGuvf-NRcWAcY8z7Rlr7aDfFo_RRpLEpjZnxTKrE1btPWWYDZ507wZKts'
 
 const NodeCache = require( "node-cache" );
 const myCache = new NodeCache();
@@ -29,7 +38,6 @@ web3.eth.subscribe('logs', {
     address: address
 }, function (error, result) {
     if (!error) {
-        console.log(result.transactionHash)
         let cache = myCache.get("transaction_" + result.transactionHash);
         if (cache == undefined) {
             myCache.set( "transaction_" + result.transactionHash, true, 10000)
@@ -160,11 +168,107 @@ function analyzeNFTAndSendDiscord(informations) {
     }
 
     if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type != 'LIGHT'
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: WEBHOOK_LOWEST_PRICE,
+            webhook: WEBHOOK_LOWEST_PRICE_DARK,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_LIGHT,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'FIRE'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_FIRE,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WATER'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_WATER,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_ICE,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_ELECTRIC,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_METAL,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_WIND,
+            free_trial: false,
+            direct_bsc: true,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.pvu_price <= 35 && informations.pvu_le_hour_price <= 8
+        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'PARASITE'
+    ) {
+        informations.discord_alert = 1
+        webhook = {
+            webhook: WEBHOOK_LOWEST_PRICE_PARASITE,
             free_trial: false,
             direct_bsc: true,
             disable: false

@@ -12,4 +12,4 @@ pm2 start bot1 --watch
 
 sleep 30
 
-pm2 start bot2 --watch=
+pm2 start bot2 --watch

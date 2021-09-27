@@ -30,7 +30,7 @@ async function execute() {
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
-                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
+                if (transaction.to && transaction.to.toLowerCase() == address) {
                     console.log(transaction.hash)
                     myCache.set("transaction_" + transaction.hash, true, 10000)
 

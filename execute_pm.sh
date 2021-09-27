@@ -10,7 +10,7 @@ sleep 1
 
 pm2 stop bot3
 
-sleep 15
+sleep 1
 
 pm2 start bot1 --watch
 

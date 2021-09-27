@@ -5,9 +5,21 @@ const Web3 = require("web3");
 
 const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 const abiDecoder = require('abi-decoder');
-const abi = require("./abi.json");
-abiDecoder.addABI(abi);
-const address = process.env.CONTRACT_ADDRESS
+
+// ADDRESS READ
+const abiReadAuction = require("./abi.json");
+abiDecoder.addABI(abiReadAuction);
+const addressReadAuction = process.env.CONTRACT_ADDRESS
+
+// ADDRESS BID
+const contractAddressBid = process.env.CONTRACT_ADDRESS_BID
+const abiBid = require("./abi_bid.json");
+const contractBid = new web3.eth.Contract(abiBid, contractAddressBid);
+
+// ACCOUNT BID
+const account = web3.eth.accounts.privateKeyToAccount('0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY);
+web3.eth.accounts.wallet.add(account);
+web3.eth.defaultAccount = account.address;
 
 const {Webhook, MessageBuilder} = require('discord-webhook-node');
 
@@ -22,16 +34,16 @@ const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84
 const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
+execute()
 
 async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
-        console.log(txHash)
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
-                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
+                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == addressReadAuction) {
                     // console.log(transaction.hash)
                     myCache.set("transaction_" + transaction.hash, true, 10000)
 
@@ -43,121 +55,6 @@ async function execute() {
         })
     });
 }
-
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
-}
-
-// function executeTwo() {
-//
-// }
-
-execute()
-// console.log('test999')
-// await execute()
-
-// const contract = new web3.eth.Contract(abi, address)
-
-// web3.eth.getBlockNumber().then(console.log);
-
-// contract.events.Transfer({
-//     // filter: {myIndexedParam: [20,23], myOtherIndexedParam: '0x123456789...'}, // Using an array means OR: e.g. 20 or 23
-//     // fromBlock: 11258798
-// }, function(error, event){ console.log(event); })
-//     .on("connected", function(subscriptionId){
-//         console.log(subscriptionId);
-//     })
-//     .on('data', function(event){
-//         console.log(event); // same results as the optional callback above
-//     })
-
-// web3.eth.subscribe('pendingTransactions', (err, txHash) => {
-//     if (err) throw(err);
-// }).on("data", function (txHash) {
-//     web3.eth.getTransaction(txHash, (err, transaction) => {
-//         if (transaction) {
-//             let cache = myCache.get("transaction_" + transaction.hash);
-//             if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
-//                 console.log(transaction.hash)
-//                 myCache.set("transaction_" + transaction.hash, true, 10000)
-//
-//                 processInput(transaction.input).catch(r => {
-//                     console.log("DEU RUIM")
-//                 })
-//             }
-//         }
-//     })
-// });
-
-// const myContract = new web3.eth.Contract(abi, address);
-//
-//
-// let options = {
-//     filter: {
-//         method: "createSaleAuction"    //Only get events where transfer value was 1000 or 1337
-//     },
-//     // fromBlock: 0,                  //Number || "earliest" || "pending" || "latest"
-//     toBlock: 'latest'
-// };
-//
-// myContract.getPastEvents('Transfer', options)
-//     .then(results => console.log(results))
-//     .catch(err => console.log('test eerr', err));
-
-// async function test() {
-//     web3.eth.getBlock("latest").then(res => {
-//         console.log(res.gasLimit / res.transactions.length);
-//     });
-// }
-//
-// test()
-
-// web3.eth.subscribe('logs', {
-//     address: address,
-//     topics: ['0xa9c8dfcda5664a5a124c713e386da27de87432d5b668e79458501eb296389ba7']
-// }, function (error, result) {
-//     if (!error) {
-//         console.log(result.transactionHash)
-//         // let cache = myCache.get("transaction_" + result.transactionHash);
-//         // if (cache == undefined) {
-//         //     myCache.set( "transaction_" + result.transactionHash, true, 10000)
-//         //     web3.eth.getTransaction(result.transactionHash)
-//         //         .then(data => {
-//         //             if (typeof result.transactionHash !== 'undefined' && result.transactionHash !== null) {
-//         //                 processInput(data.input).then(r => {
-//         //                 }).catch(r => {
-//         //                     console.log("DEU RUIM")
-//         //                 })
-//         //             }
-//         //         })
-//         // }
-//     }
-// });
-
-// web3.eth.subscribe('pendingTransactions', function (error, txHash) {
-//     if (!error) {
-//         let cache = myCache.get("transaction_" + txHash);
-//         if (cache == undefined) {
-//             myCache.set( "transaction_" + txHash, true, 10000)
-//             web3.eth.getTransaction(txHash)
-//                 .then(data => {
-//                     if (data && data.to == '0x926eae99527a9503eadb4c9e927f21f84f20c977'){
-//                         console.log(data)
-//                     } else {
-//                         console.log('test')
-//                     }
-//                     // if (typeof result.transactionHash !== 'undefined' && result.transactionHash !== null) {
-//                     //     processInput(data.input).then(r => {
-//                     //     }).catch(r => {
-//                     //         console.log("DEU RUIM")
-//                     //     })
-//                     // }
-//                 })
-//         }
-//     }
-// });
 
 async function processInput(input) {
     const decodedData = abiDecoder.decodeMethod(input);
@@ -212,9 +109,9 @@ async function getPvuDataInformation(plantIdNumber) {
         );
 }
 
-const contractAbi = new web3.eth.Contract(abi, address)
+const contractReadAuction = new web3.eth.Contract(abiReadAuction, addressReadAuction)
 const getPlantId = async function (tokenId, price) {
-    contractAbi.methods.getPlant(tokenId).call().then(data => {
+    contractReadAuction.methods.getPlant(tokenId).call().then(data => {
         getPlantInformations(data.plantId, price, tokenId)
     })
 }
@@ -247,11 +144,31 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         rarity: plantPvuRarityLE.rarity,
         pvu_json: null,
         price: price,
+        buy: false,
     }
 
-    informations = await analyzeNFTAndSendDiscord(informations)
+    informations = await analyzeNFT(informations)
 
-    savePvuDataInformation(informations)
+    buyNFT(informations)
+
+    // if (informations.buy === true) {
+    //     buyNFT(informations)
+    // }
+
+    // savePvuDataInformation(informations)
+}
+
+async function buyNFT(informations) {
+    let lastBlock = await web3.eth.getBlock("latest")
+    let gasLimit = lastBlock.gasLimit
+    let gasUsed = lastBlock.gasUsed
+
+    contractBid.methods.bid(informations.pvu_token_id, informations.price).send({from: web3.eth.defaultAccount, gas: gasUsed, gasLimit: gasLimit})
+        .then(function (result) {
+            console.log('result', result)
+        }).catch(function (err) {
+        console.log('error', err)
+    });
 }
 
 
@@ -268,147 +185,71 @@ async function getBasePriceByElement(element) {
 }
 
 
-async function analyzeNFTAndSendDiscord(informations) {
-    let webhook = null
+async function analyzeNFT(informations) {
     let basePriceInformation = await getBasePriceByElement(informations.plant_type)
-    let basePrice = basePriceInformation ? basePriceInformation.price : 35
-
-    if (informations.status == 1 && informations.hour <= 96 && informations.le_hour >= 10
-        && informations.pvu_le_hour_price != 99.00000000 && informations.pvu_price != 99.99999999
-        && informations.rent >= 0.1 && informations.rent <= 0.25
-    ) {
-        informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_ROI_10_TO_25,
-            free_trial: true,
-            direct_bsc: true,
-            disable: false
-        }
-    }
-
-    if (informations.status == 1 && informations.hour <= 96 && informations.le_hour >= 10
-        && informations.pvu_le_hour_price != 99.00000000 && informations.pvu_price != 99.99999999
-        && informations.rent >= 0.4 && informations.plant_type != 'LIGHT'
-    ) {
-        informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_ROI_ABOVE_40,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
-    }
+    let basePrice = basePriceInformation ? basePriceInformation.price : 20
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_DARK,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_LIGHT,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'FIRE'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_FIRE,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WATER'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_WATER,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_ICE,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_ELECTRIC,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_METAL,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_WIND,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
+        informations.buy = true
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'PARASITE'
     ) {
         informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_PARASITE,
-            free_trial: false,
-            direct_bsc: true,
-            disable: false
-        }
-    }
-
-    if (webhook) {
-        sendDiscordAlert(webhook, informations)
+        informations.buy = true
     }
 
     return informations

@@ -31,7 +31,7 @@ async function execute() {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
                 if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
-                    console.log(transaction.hash)
+                    // console.log(transaction.hash)
                     myCache.set("transaction_" + transaction.hash, true, 10000)
 
                     processInput(transaction.input).catch(r => {
@@ -40,10 +40,6 @@ async function execute() {
                 }
             }
         })
-    }).on("error", function (err) {
-        console.log('error subscribe')
-    }).on("connected", function (err) {
-        console.log('conected subscribe')
     });
     await sleep(1000)
     console.log('execute')

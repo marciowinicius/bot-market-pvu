@@ -27,6 +27,7 @@ async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
+        console.log(txHash)
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
@@ -41,9 +42,6 @@ async function execute() {
             }
         })
     });
-    await sleep(1000)
-    console.log('execute')
-    await execute()
 }
 
 function sleep(ms) {

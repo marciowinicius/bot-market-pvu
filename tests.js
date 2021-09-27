@@ -40,9 +40,13 @@ async function execute() {
                 }
             }
         })
+    }).on("error", function (err) {
+        console.log('error subscribe')
+    }).on("connected", function (err) {
+        console.log('conected subscribe')
     });
-
     await sleep(1000)
+    console.log('execute')
     await execute()
 }
 

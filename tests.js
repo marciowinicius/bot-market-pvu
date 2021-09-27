@@ -23,7 +23,7 @@ const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
 
-function execute() {
+async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
@@ -41,6 +41,9 @@ function execute() {
             }
         })
     });
+
+    await sleep(1000)
+    await execute()
 }
 
 function sleep(ms) {

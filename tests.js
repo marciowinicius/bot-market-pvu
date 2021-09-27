@@ -300,7 +300,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
+        && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
         webhook = {
@@ -312,7 +312,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
+        && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
     ) {
         informations.discord_alert = 1
         webhook = {

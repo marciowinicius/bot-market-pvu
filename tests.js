@@ -29,7 +29,6 @@ async function execute() {
     }).on("data", function (txHash) {
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
-                console.log('teste', transaction)
                 let cache = myCache.get("transaction_" + transaction.hash);
                 if (cache == undefined && transaction.to && transaction.to.toLowerCase() == address) {
                     console.log(transaction.hash)

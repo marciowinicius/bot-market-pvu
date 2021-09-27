@@ -372,7 +372,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
+        && informations.hour <= 480 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
     ) {
         informations.discord_alert = 1
         webhook = {

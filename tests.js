@@ -193,14 +193,14 @@ async function analyzeNFT(informations) {
         && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
@@ -235,7 +235,7 @@ async function analyzeNFT(informations) {
         && informations.hour <= 480 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8

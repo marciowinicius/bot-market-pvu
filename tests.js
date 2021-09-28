@@ -171,7 +171,8 @@ async function buyNFT(informations) {
     contractBid.methods.bid(informations.pvu_token_id, informations.price).send({
         from: web3.eth.defaultAccount,
         gas: 300000,
-        gasPrice: '7000000000'
+        gasPrice: '7000000000',
+        nonce: 4900
     }).then(function (result) {
         console.log('SUCCESS BUY')
         sellNFT(informations)

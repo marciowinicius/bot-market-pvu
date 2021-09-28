@@ -4,12 +4,14 @@ const os = require("os");
 const Web3 = require("web3");
 
 const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
+// const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
+// const web3 = new Web3('wss://dex.binance.org/api/ws');
 const abiDecoder = require('abi-decoder');
 
 // ADDRESS READ
-const abiReadAuction = require("./abi.json");
-abiDecoder.addABI(abiReadAuction);
-const addressReadAuction = process.env.CONTRACT_ADDRESS
+const abiReadAndSellAuction = require("./abi.json");
+abiDecoder.addABI(abiReadAndSellAuction);
+const addressReadAndSellAuction = process.env.CONTRACT_ADDRESS
 
 // ADDRESS BID
 const contractAddressBid = process.env.CONTRACT_ADDRESS_BID
@@ -43,7 +45,7 @@ async function execute() {
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
-                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == addressReadAuction) {
+                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
                     // console.log(transaction.hash)
                     myCache.set("transaction_" + transaction.hash, true, 10000)
 
@@ -109,9 +111,9 @@ async function getPvuDataInformation(plantIdNumber) {
         );
 }
 
-const contractReadAuction = new web3.eth.Contract(abiReadAuction, addressReadAuction)
+const contractReadAndSellAuction = new web3.eth.Contract(abiReadAndSellAuction, addressReadAndSellAuction)
 const getPlantId = async function (tokenId, price) {
-    contractReadAuction.methods.getPlant(tokenId).call().then(data => {
+    contractReadAndSellAuction.methods.getPlant(tokenId).call().then(data => {
         getPlantInformations(data.plantId, price, tokenId)
     })
 }
@@ -145,29 +147,54 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         pvu_json: null,
         price: price,
         buy: false,
+        reseller_price: null,
+        gasLimit: 0,
+        gasUsed: 0
     }
 
     informations = await analyzeNFT(informations)
 
-    buyNFT(informations)
+    // buyNFT(informations)
 
-    // if (informations.buy === true) {
-    //     buyNFT(informations)
-    // }
+    if (informations.buy === true && informations.reseller_price != null && informations.reseller_price > 0) {
+        buyNFT(informations)
+    }
 
     // savePvuDataInformation(informations)
 }
 
 async function buyNFT(informations) {
-    let lastBlock = await web3.eth.getBlock("latest")
-    let gasLimit = lastBlock.gasLimit
-    let gasUsed = lastBlock.gasUsed
+    // let lastBlock = await web3.eth.getBlock("latest")
+    // informations.gasLimit = lastBlock.gasLimit
+    // informations.gasUsed = lastBlock.gasUsed
 
-    contractBid.methods.bid(informations.pvu_token_id, informations.price).send({from: web3.eth.defaultAccount, gas: gasUsed, gasLimit: gasLimit})
-        .then(function (result) {
-            console.log('result', result)
-        }).catch(function (err) {
-        console.log('error', err)
+    contractBid.methods.bid(informations.pvu_token_id, informations.price).send({
+        from: web3.eth.defaultAccount,
+        gas: 300000,
+        gasPrice: '7000000000'
+    }).then(function (result) {
+        console.log('SUCCESS BUY')
+        sellNFT(informations)
+    }).catch(function (err) {
+        console.log('error BID:', err)
+    });
+}
+
+async function sellNFT(informations) {
+    let timeStampUTCNow = ((new Date((new Date(new Date().setDate(new Date().getDate() + 1000))).toUTCString())).getTime())/1000
+    contractReadAndSellAuction.methods.createSaleAuction(
+        informations.pvu_token_id,
+        informations.reseller_price,
+        informations.reseller_price,
+        timeStampUTCNow
+    ).send({
+        from: web3.eth.defaultAccount,
+        gas: 250000,
+        gasPrice: '7000000000'
+    }).then(function (result) {
+        console.log('SUCCESS SELL: ', result)
+    }).catch(function (err) {
+        console.log('error SELL: ', err)
     });
 }
 
@@ -187,7 +214,9 @@ async function getBasePriceByElement(element) {
 
 async function analyzeNFT(informations) {
     let basePriceInformation = await getBasePriceByElement(informations.plant_type)
-    let basePrice = basePriceInformation ? basePriceInformation.price : 20
+    let basePrice = basePriceInformation ? basePriceInformation.price : 15
+
+    informations.reseller_price = basePriceInformation.reseller_price
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
@@ -203,15 +232,27 @@ async function analyzeNFT(informations) {
         informations.buy = false
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'FIRE'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'FIRE'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = true
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'FIRE'
     ) {
         informations.discord_alert = 1
         informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WATER'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WATER'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = true
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'WATER'
     ) {
         informations.discord_alert = 1
         informations.buy = true
@@ -221,14 +262,14 @@ async function analyzeNFT(informations) {
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
@@ -242,11 +283,17 @@ async function analyzeNFT(informations) {
         && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
     ) {
         informations.discord_alert = 1
-        informations.buy = true
+        informations.buy = false
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'PARASITE'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'PARASITE'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = true
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'PARASITE'
     ) {
         informations.discord_alert = 1
         informations.buy = true
@@ -269,7 +316,7 @@ async function sendDiscordAlert(webhook, informations) {
 
 function getDefaultObjDiscordMessage(webhook, informations) {
     return {
-        content: webhook.free_trial ? ":warning: Get higher ROI notifications for only 1 PVU/week, check out our #:bookmark:-plans" : '',
+        content: webhook.free_trial ? ":warning: Get higher ROI notifications check out our #:bookmark:-plans" : '',
         title: "A good NFT opportunity appeared!",
         description: getDefaultDiscordMessage(webhook, informations),
         color: '7506394'
@@ -302,7 +349,7 @@ function getBscMessage(informations) {
 }
 
 function getExtraMessage() {
-    return os.EOL + ":warning: Get higher ROI notifications for only 1 PVU/week, check out our #:bookmark:-plans"
+    return os.EOL + ":warning: Get higher ROI notifications check out our #:bookmark:-plans"
 }
 
 function parsePrice(price) {

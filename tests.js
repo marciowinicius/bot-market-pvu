@@ -428,7 +428,7 @@ async function sendDiscordAlert(webhook, informations) {
 
 function getDefaultObjDiscordMessage(webhook, informations) {
     return {
-        content: webhook.free_trial ? ":warning: Get higher ROI notifications for only 1 PVU/week, check out our #:bookmark:-plans" : '',
+        content: webhook.free_trial ? ":warning: Get higher ROI notifications, check out our #:bookmark:-plans" : '',
         title: "A good NFT opportunity appeared!",
         description: getDefaultDiscordMessage(webhook, informations),
         color: '7506394'
@@ -461,7 +461,7 @@ function getBscMessage(informations) {
 }
 
 function getExtraMessage() {
-    return os.EOL + ":warning: Get higher ROI notifications for only 1 PVU/week, check out our #:bookmark:-plans"
+    return os.EOL + ":warning: Get higher ROI notifications, check out our #:bookmark:-plans"
 }
 
 function parsePrice(price) {

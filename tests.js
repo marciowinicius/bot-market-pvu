@@ -38,16 +38,39 @@ const myCache = new NodeCache();
 
 execute()
 
+// async function execute() {
+//     let options = {
+//         fromBlock: 0,
+//         address: contractAddressBid,    //Only get events from specific addresses
+//         topics: ['0xa9c8dfcda5664a5a124c713e386da27de87432d5b668e79458501eb296389ba7']                              //What topics to subscribe to
+//     };
+//
+//     let subscription = web3.eth.subscribe('logs', options, (err, event) => {
+//         if (!err) {
+//             console.log('error event:', event.transactionHash)
+//         }
+//     });
+//     subscription.on('data', event => {
+//         web3.eth.getTransaction(event.transactionHash, (err, transaction) => {
+//             if (transaction) {
+//                 processInput(transaction.input).catch(r => {
+//                     console.log("DEU RUIM")
+//                 })
+//             }
+//         })
+//     })
+// }
+
 async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
-                let cache = myCache.get("transaction_" + transaction.hash);
+                let cache = getCache("transaction_" + transaction.hash)
                 if (cache == undefined && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
                     // console.log(transaction.hash)
-                    myCache.set("transaction_" + transaction.hash, true, 10000)
+                    setCache("transaction_" + transaction.hash, true, 60)
 
                     processInput(transaction.input).catch(r => {
                         console.log("DEU RUIM")
@@ -87,7 +110,21 @@ async function processInput(input) {
     getPlantId(tokenID, price)
 }
 
+async function getCache(key) {
+    return myCache.get(key);
+}
+
+async function setCache(key, value, timeSeconds) {
+    myCache.set(key, value, timeSeconds);
+}
+
 async function getPvuData(tokenId) {
+    // let cache = getCache("get_pvu_data_" + tokenId)
+    //
+    // if (cache != undefined) {
+    //     return cache
+    // }
+
     return await sequelize
         .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);",
             {
@@ -97,9 +134,19 @@ async function getPvuData(tokenId) {
                 raw: true
             }
         );
+
+    // setCache("get_pvu_data_" + tokenId, query, 20)
+    //
+    // return query
 }
 
 async function getPvuDataInformation(plantIdNumber) {
+    // let cache = getCache("get_pvu_data_information_" + plantIdNumber)
+    //
+    // if (cache != undefined) {
+    //     return cache
+    // }
+
     return await sequelize
         .query("SELECT * FROM pvu_nft_informations WHERE pvu_plant_id = :plant_id_number;",
             {
@@ -109,6 +156,10 @@ async function getPvuDataInformation(plantIdNumber) {
                 raw: true
             }
         );
+
+    // setCache("get_pvu_data_information_" + plantIdNumber, query, 50000)
+    //
+    // return query
 }
 
 const contractReadAndSellAuction = new web3.eth.Contract(abiReadAndSellAuction, addressReadAndSellAuction)
@@ -160,10 +211,17 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         buyNFT(informations)
     }
 
-    // savePvuDataInformation(informations)
+    savePvuDataInformation(informations)
+}
+
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
 }
 
 async function buyNFT(informations) {
+    await sleep(1000)
     // let lastBlock = await web3.eth.getBlock("latest")
     // informations.gasLimit = lastBlock.gasLimit
     // informations.gasUsed = lastBlock.gasUsed
@@ -171,8 +229,7 @@ async function buyNFT(informations) {
     contractBid.methods.bid(informations.pvu_token_id, informations.price).send({
         from: web3.eth.defaultAccount,
         gas: 300000,
-        gasPrice: '7000000000',
-        nonce: 4900
+        gasPrice: '5000000000'
     }).then(function (result) {
         console.log('SUCCESS BUY')
         sellNFT(informations)
@@ -182,7 +239,7 @@ async function buyNFT(informations) {
 }
 
 async function sellNFT(informations) {
-    let timeStampUTCNow = ((new Date((new Date(new Date().setDate(new Date().getDate() + 1000))).toUTCString())).getTime())/1000
+    let timeStampUTCNow = ((new Date((new Date(new Date().setDate(new Date().getDate() + 1000))).toUTCString())).getTime()) / 1000
     contractReadAndSellAuction.methods.createSaleAuction(
         informations.pvu_token_id,
         informations.reseller_price,
@@ -190,8 +247,8 @@ async function sellNFT(informations) {
         timeStampUTCNow
     ).send({
         from: web3.eth.defaultAccount,
-        gas: 250000,
-        gasPrice: '7000000000'
+        gas: 300000,
+        gasPrice: '5000000000'
     }).then(function (result) {
         console.log('SUCCESS SELL: ', result)
     }).catch(function (err) {
@@ -201,6 +258,12 @@ async function sellNFT(informations) {
 
 
 async function getBasePriceByElement(element) {
+    // let cache = getCache("get_base_price_by_element_" + element)
+    //
+    // if (cache != undefined) {
+    //     return cache
+    // }
+
     return await sequelize
         .query("SELECT * FROM pvu_element_prices WHERE element = :element;",
             {
@@ -210,6 +273,10 @@ async function getBasePriceByElement(element) {
                 raw: true
             }
         );
+
+    // setCache("get_base_price_by_element_" + element, query, 30)
+    //
+    // return query
 }
 
 
@@ -219,18 +286,30 @@ async function analyzeNFT(informations) {
 
     informations.reseller_price = basePriceInformation.reseller_price
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'DARK'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'LIGHT'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'LIGHT'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
     // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
@@ -259,32 +338,56 @@ async function analyzeNFT(informations) {
         informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ICE'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'ICE'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'ELETRIC'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'ELETRIC'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 480 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 480 && informations.rent >= 0.15 && informations.plant_type == 'METAL'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'METAL'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-        && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
+    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
+    //     && informations.hour <= 168 && informations.rent >= 0.15 && informations.plant_type == 'WIND'
+    // ) {
+    //     informations.discord_alert = 1
+    //     informations.buy = false
+    // }
+
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'WIND'
     ) {
         informations.discord_alert = 1
-        informations.buy = false
+        informations.buy = true
     }
 
     // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8

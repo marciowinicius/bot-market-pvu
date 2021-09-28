@@ -65,26 +65,30 @@ async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
-        web3.eth.getTransaction(txHash, (err, transaction) => {
+        // console.log(txHash)
+        web3.eth.getTransaction(txHash, async (err, transaction) => {
             if (transaction) {
-                let cache = getCache("transaction_" + transaction.hash)
-                if (cache == undefined && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
-                    // console.log(transaction.hash)
-                    setCache("transaction_" + transaction.hash, true, 60)
-
-                    processInput(transaction.input).catch(r => {
-                        console.log("DEU RUIM")
-                    })
-                }
+                checkTransaction(transaction)
             }
         })
     });
 }
 
-async function processInput(input) {
-    const decodedData = abiDecoder.decodeMethod(input);
+async function checkTransaction(transaction) {
+    let cache = await myCache.get("transaction_" + transaction.hash)
+    if ((typeof cache === "undefined") && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
+        myCache.set("transaction_" + transaction.hash, true, 60)
 
-    if (typeof decodedData.params == 'undefined' && decodedData.params == null) {
+        processInput(transaction).catch(r => {
+            console.log("DEU RUIM")
+        })
+    }
+}
+
+async function processInput(transaction) {
+    const decodedData = abiDecoder.decodeMethod(transaction.input);
+
+    if ((typeof decodedData.params == 'undefined') || decodedData.params == null) {
         return
     }
 
@@ -107,25 +111,18 @@ async function processInput(input) {
         return
     }
 
-    getPlantId(tokenID, price)
-}
-
-async function getCache(key) {
-    return myCache.get(key);
-}
-
-async function setCache(key, value, timeSeconds) {
-    myCache.set(key, value, timeSeconds);
+    getPlantId(tokenID, price, transaction)
 }
 
 async function getPvuData(tokenId) {
-    // let cache = getCache("get_pvu_data_" + tokenId)
-    //
-    // if (cache != undefined) {
-    //     return cache
-    // }
+    let cache = myCache.get("get_pvu_data_" + tokenId)
 
-    return await sequelize
+    if (typeof cache !== "undefined") {
+        console.log('get_pvu_data_from_cache')
+        return cache
+    }
+
+    let query = await sequelize
         .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);",
             {
                 type: QueryTypes.SELECT,
@@ -135,19 +132,20 @@ async function getPvuData(tokenId) {
             }
         );
 
-    // setCache("get_pvu_data_" + tokenId, query, 20)
-    //
-    // return query
+    myCache.set("get_pvu_data_" + tokenId, query, 150)
+
+    return query
 }
 
 async function getPvuDataInformation(plantIdNumber) {
-    // let cache = getCache("get_pvu_data_information_" + plantIdNumber)
-    //
-    // if (cache != undefined) {
-    //     return cache
-    // }
+    let cache = myCache.get("get_pvu_data_information_" + plantIdNumber)
 
-    return await sequelize
+    if (typeof cache !== "undefined") {
+        console.log('get_pvu_data_information_from_cache')
+        return cache
+    }
+
+    let query = await sequelize
         .query("SELECT * FROM pvu_nft_informations WHERE pvu_plant_id = :plant_id_number;",
             {
                 type: QueryTypes.SELECT,
@@ -157,19 +155,19 @@ async function getPvuDataInformation(plantIdNumber) {
             }
         );
 
-    // setCache("get_pvu_data_information_" + plantIdNumber, query, 50000)
-    //
-    // return query
+    myCache.set("get_pvu_data_information_" + plantIdNumber, query, 50000)
+
+    return query
 }
 
 const contractReadAndSellAuction = new web3.eth.Contract(abiReadAndSellAuction, addressReadAndSellAuction)
-const getPlantId = async function (tokenId, price) {
+const getPlantId = async function (tokenId, price, transaction) {
     contractReadAndSellAuction.methods.getPlant(tokenId).call().then(data => {
-        getPlantInformations(data.plantId, price, tokenId)
+        getPlantInformations(data.plantId, price, tokenId, transaction)
     })
 }
 
-const getPlantInformations = async function (plantId, price, tokenId) {
+const getPlantInformations = async function (plantId, price, tokenId, transaction) {
     let realPrice = parsePrice(price)
     let plantPvuIdNumber = getPlantPvuIdNumber(plantId)
     let pvuDataInformation = await getPvuDataInformation(plantPvuIdNumber)
@@ -208,7 +206,7 @@ const getPlantInformations = async function (plantId, price, tokenId) {
     // buyNFT(informations)
 
     if (informations.buy === true && informations.reseller_price != null && informations.reseller_price > 0) {
-        buyNFT(informations)
+        buyNFT(informations, transaction)
     }
 
     savePvuDataInformation(informations)
@@ -220,16 +218,14 @@ function sleep(ms) {
     });
 }
 
-async function buyNFT(informations) {
-    await sleep(1000)
-    // let lastBlock = await web3.eth.getBlock("latest")
-    // informations.gasLimit = lastBlock.gasLimit
-    // informations.gasUsed = lastBlock.gasUsed
+async function buyNFT(informations, transaction) {
+    await sleep(500)
 
     contractBid.methods.bid(informations.pvu_token_id, informations.price).send({
         from: web3.eth.defaultAccount,
         gas: 300000,
-        gasPrice: '5000000000'
+        gasPrice: '7000000000',
+        nonce: web3.utils.toHex(web3.eth.getTransactionCount(account.address))
     }).then(function (result) {
         console.log('SUCCESS BUY')
         sellNFT(informations)
@@ -258,13 +254,14 @@ async function sellNFT(informations) {
 
 
 async function getBasePriceByElement(element) {
-    // let cache = getCache("get_base_price_by_element_" + element)
-    //
-    // if (cache != undefined) {
-    //     return cache
-    // }
+    let cache = myCache.get("get_base_price_by_element_" + element)
 
-    return await sequelize
+    if (typeof cache !== "undefined") {
+        console.log('get_base_price_by_element_from_cache')
+        return cache
+    }
+
+    let query = await sequelize
         .query("SELECT * FROM pvu_element_prices WHERE element = :element;",
             {
                 type: QueryTypes.SELECT,
@@ -274,9 +271,9 @@ async function getBasePriceByElement(element) {
             }
         );
 
-    // setCache("get_base_price_by_element_" + element, query, 30)
-    //
-    // return query
+    myCache.set("get_base_price_by_element_" + element, query, 30)
+
+    return query
 }
 
 

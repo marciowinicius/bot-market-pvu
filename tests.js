@@ -227,6 +227,12 @@ async function estimateGas(data, nonce) {
     );
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms);
+    });
+}
+
 async function buyNFT(informations, transaction) {
     // let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
     // var block = await web3.eth.getBlock("latest");
@@ -248,6 +254,7 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
+    await sleep(1000)
     const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
     signPromise.then((signedTx) => {
@@ -258,7 +265,7 @@ async function buyNFT(informations, transaction) {
         let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
         sentTx.on("receipt", receipt => {
             console.log('SUCCESS BUY: ', receipt)
-            // sellNFT(informations)
+            sellNFT(informations)
         });
         sentTx.on("error", err => {
             console.log('error BID:', err)
@@ -312,7 +319,7 @@ async function getBasePriceByElement(element) {
 
 async function analyzeNFT(informations) {
     let basePriceInformation = await getBasePriceByElement(informations.plant_type)
-    let basePrice = basePriceInformation ? basePriceInformation.price : 15
+    let basePrice = basePriceInformation ? basePriceInformation.price * 0.65 : 10
 
     informations.reseller_price = basePriceInformation.reseller_price
 

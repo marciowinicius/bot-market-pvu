@@ -244,7 +244,7 @@ async function buyNFT(informations, transaction) {
         // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
         // nonce: 58,
         // optional if you are invoking say a payable function
-        value: web3.utils.toHex(informations.reseller_price),
+        // value: web3.utils.toHex(informations.reseller_price),
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };

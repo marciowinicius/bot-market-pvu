@@ -5,7 +5,8 @@ const Web3 = require("web3");
 
 const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
-// const web3 = new Web3('wss://dex.binance.org/api/ws');
+// const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
+// const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
 const abiDecoder = require('abi-decoder');
 
 // ADDRESS READ
@@ -19,7 +20,8 @@ const abiBid = require("./abi_bid.json");
 const contractBid = new web3.eth.Contract(abiBid, contractAddressBid);
 
 // ACCOUNT BID
-const account = web3.eth.accounts.privateKeyToAccount('0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY);
+const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
+const account = web3.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
 web3.eth.accounts.wallet.add(account);
 web3.eth.defaultAccount = account.address;
 
@@ -77,7 +79,6 @@ async function execute() {
 async function checkTransaction(transaction) {
     let cache = await myCache.get("transaction_" + transaction.hash)
     if ((typeof cache === "undefined") && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
-        myCache.set("transaction_" + transaction.hash, true, 60)
 
         processInput(transaction).catch(r => {
             console.log("DEU RUIM")
@@ -108,6 +109,7 @@ async function processInput(transaction) {
     let pvuData = await getPvuData(tokenID)
 
     if (pvuData) {
+        console.log('Já foi encontrado anteriormente e é revenda.')
         return
     }
 
@@ -115,7 +117,7 @@ async function processInput(transaction) {
 }
 
 async function getPvuData(tokenId) {
-    let cache = myCache.get("get_pvu_data_" + tokenId)
+    let cache = await myCache.get("get_pvu_data_" + tokenId)
 
     if (typeof cache !== "undefined") {
         console.log('get_pvu_data_from_cache')
@@ -123,7 +125,7 @@ async function getPvuData(tokenId) {
     }
 
     let query = await sequelize
-        .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);",
+        .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY);",
             {
                 type: QueryTypes.SELECT,
                 plain: true,
@@ -138,7 +140,7 @@ async function getPvuData(tokenId) {
 }
 
 async function getPvuDataInformation(plantIdNumber) {
-    let cache = myCache.get("get_pvu_data_information_" + plantIdNumber)
+    let cache = await myCache.get("get_pvu_data_information_" + plantIdNumber)
 
     if (typeof cache !== "undefined") {
         console.log('get_pvu_data_information_from_cache')
@@ -212,26 +214,58 @@ const getPlantInformations = async function (plantId, price, tokenId, transactio
     savePvuDataInformation(informations)
 }
 
-function sleep(ms) {
-    return new Promise((resolve) => {
-        setTimeout(resolve, ms);
-    });
+async function estimateGas(data, nonce) {
+    web3.eth.estimateGas({
+        "from": account.address,
+        "nonce": nonce,
+        "to": contractAddressBid,
+        "data": data
+    }).then(r =>
+        console.log(r)
+    ).catch(err =>
+        console.log(err)
+    );
 }
 
 async function buyNFT(informations, transaction) {
-    await sleep(500)
+    let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
+    // var block = await web3.eth.getBlock("latest");
+    // var gasLimit = block.gasLimit/block.transactions.length;
+    // console.log('nonce: ',nonce)
+    let contractBidData = contractBid.methods.bid(informations.pvu_token_id, informations.price).encodeABI()
+    estimateGas(contractBidData, nonce)
 
-    contractBid.methods.bid(informations.pvu_token_id, informations.price).send({
-        from: web3.eth.defaultAccount,
-        gas: 300000,
-        gasPrice: '7000000000',
-        nonce: web3.utils.toHex(web3.eth.getTransactionCount(account.address))
-    }).then(function (result) {
-        console.log('SUCCESS BUY')
-        sellNFT(informations)
-    }).catch(function (err) {
-        console.log('error BID:', err)
-    });
+    // let tx = {
+    //     // this could be provider.addresses[0] if it exists
+    //     from: account.address,
+    //     // target address, this could be a smart contract address
+    //     to: contractAddressBid,
+    //     // optional if you want to specify the gas limit
+    //     gas: web3.utils.toHex(3000000),
+    //     // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
+    //     // nonce: 58,
+    //     // optional if you are invoking say a payable function
+    //     // value: informations.price,
+    //     // this encodes the ABI of the method and the arguements
+    //     data: contractBidData
+    // };
+    // const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    //
+    // signPromise.then((signedTx) => {
+    //     console.log(signedTx)
+    //     // raw transaction string may be available in .raw or
+    //     // .rawTransaction depending on which signTransaction
+    //     // function was called
+    //     let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    //     sentTx.on("receipt", receipt => {
+    //         console.log('SUCCESS BUY: ', receipt)
+    //     });
+    //     sentTx.on("error", err => {
+    //         console.log('error BID:', err)
+    //     });
+    // }).catch((err) => {
+    //     console.log('error sign promise:', err)
+    // });
 }
 
 async function sellNFT(informations) {
@@ -254,7 +288,7 @@ async function sellNFT(informations) {
 
 
 async function getBasePriceByElement(element) {
-    let cache = myCache.get("get_base_price_by_element_" + element)
+    let cache = await myCache.get("get_base_price_by_element_" + element)
 
     if (typeof cache !== "undefined") {
         console.log('get_base_price_by_element_from_cache')

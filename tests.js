@@ -228,44 +228,44 @@ async function estimateGas(data, nonce) {
 }
 
 async function buyNFT(informations, transaction) {
-    let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
+    // let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
     // var block = await web3.eth.getBlock("latest");
     // var gasLimit = block.gasLimit/block.transactions.length;
     // console.log('nonce: ',nonce)
     let contractBidData = contractBid.methods.bid(informations.pvu_token_id, informations.price).encodeABI()
-    estimateGas(contractBidData, nonce)
 
-    // let tx = {
-    //     // this could be provider.addresses[0] if it exists
-    //     from: account.address,
-    //     // target address, this could be a smart contract address
-    //     to: contractAddressBid,
-    //     // optional if you want to specify the gas limit
-    //     gas: web3.utils.toHex(3000000),
-    //     // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
-    //     // nonce: 58,
-    //     // optional if you are invoking say a payable function
-    //     // value: informations.price,
-    //     // this encodes the ABI of the method and the arguements
-    //     data: contractBidData
-    // };
-    // const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
-    //
-    // signPromise.then((signedTx) => {
-    //     console.log(signedTx)
-    //     // raw transaction string may be available in .raw or
-    //     // .rawTransaction depending on which signTransaction
-    //     // function was called
-    //     let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    //     sentTx.on("receipt", receipt => {
-    //         console.log('SUCCESS BUY: ', receipt)
-    //     });
-    //     sentTx.on("error", err => {
-    //         console.log('error BID:', err)
-    //     });
-    // }).catch((err) => {
-    //     console.log('error sign promise:', err)
-    // });
+    let tx = {
+        // this could be provider.addresses[0] if it exists
+        from: account.address,
+        // target address, this could be a smart contract address
+        to: contractAddressBid,
+        // optional if you want to specify the gas limit
+        gas: web3.utils.toHex(30000000),
+        // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
+        // nonce: 58,
+        // optional if you are invoking say a payable function
+        // value: informations.price,
+        // this encodes the ABI of the method and the arguements
+        data: contractBidData
+    };
+    const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+
+    signPromise.then((signedTx) => {
+        console.log(signedTx)
+        // raw transaction string may be available in .raw or
+        // .rawTransaction depending on which signTransaction
+        // function was called
+        let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        sentTx.on("receipt", receipt => {
+            console.log('SUCCESS BUY: ', receipt)
+            sellNFT(informations)
+        });
+        sentTx.on("error", err => {
+            console.log('error BID:', err)
+        });
+    }).catch((err) => {
+        console.log('error sign promise:', err)
+    });
 }
 
 async function sellNFT(informations) {
@@ -277,8 +277,7 @@ async function sellNFT(informations) {
         timeStampUTCNow
     ).send({
         from: web3.eth.defaultAccount,
-        gas: 300000,
-        gasPrice: '5000000000'
+        gas: web3.utils.toHex(30000000)
     }).then(function (result) {
         console.log('SUCCESS SELL: ', result)
     }).catch(function (err) {

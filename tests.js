@@ -255,7 +255,7 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
-    await sleep(500)
+    await sleep(1000)
     const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
     signPromise.then((signedTx) => {

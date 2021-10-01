@@ -244,7 +244,7 @@ async function buyNFT(informations, transaction) {
         // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
         // nonce: 58,
         // optional if you are invoking say a payable function
-        // value: informations.price,
+        value: web3.utils.toHex(informations.reseller_price),
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
@@ -258,7 +258,7 @@ async function buyNFT(informations, transaction) {
         let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
         sentTx.on("receipt", receipt => {
             console.log('SUCCESS BUY: ', receipt)
-            sellNFT(informations)
+            // sellNFT(informations)
         });
         sentTx.on("error", err => {
             console.log('error BID:', err)

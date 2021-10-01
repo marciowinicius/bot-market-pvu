@@ -240,8 +240,8 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3.utils.toHex(30000000),
-        // gasPrice: web3.utils.toHex(await web3.utils.toWei('1', 'gwei')),
+        gas: web3.utils.toHex(300000),
+        gasPrice: web3.utils.toHex(await web3.utils.toWei('5', 'gwei')),
         // nonce: 58,
         // optional if you are invoking say a payable function
         // value: web3.utils.toHex(informations.reseller_price),

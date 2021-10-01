@@ -281,7 +281,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_ROI_10_TO_25,
             free_trial: true,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -294,7 +294,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_ROI_ABOVE_40,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -306,7 +306,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_DARK,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -318,7 +318,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_LIGHT,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -330,7 +330,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_FIRE,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -342,7 +342,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_WATER,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -354,7 +354,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_ICE,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -366,7 +366,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_ELECTRIC,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -378,7 +378,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_METAL,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -390,7 +390,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_WIND,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }
@@ -402,7 +402,7 @@ async function analyzeNFTAndSendDiscord(informations) {
         webhook = {
             webhook: process.env.WEBHOOK_LOWEST_PRICE_PARASITE,
             free_trial: false,
-            direct_bsc: true,
+            direct_bsc: false,
             disable: false
         }
     }

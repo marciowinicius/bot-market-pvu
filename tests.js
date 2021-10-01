@@ -319,7 +319,7 @@ async function getBasePriceByElement(element) {
 
 async function analyzeNFT(informations) {
     let basePriceInformation = await getBasePriceByElement(informations.plant_type)
-    let basePrice = basePriceInformation ? basePriceInformation.price * 0.75 : 10
+    let basePrice = basePriceInformation ? basePriceInformation.price * 0.82 : 10
 
     informations.reseller_price = basePriceInformation.reseller_price
 

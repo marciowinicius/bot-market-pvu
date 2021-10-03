@@ -255,25 +255,46 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
-    await sleep(4000)
-    const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    web3.eth.getTransactionReceipt(transaction.hash)
+        .then(function (result) {
+            console.log('transaction confirmed.')
+            let signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
-    signPromise.then((signedTx) => {
-        console.log(signedTx)
-        // raw transaction string may be available in .raw or
-        // .rawTransaction depending on which signTransaction
-        // function was called
-        let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-        sentTx.on("receipt", receipt => {
-            console.log('SUCCESS BUY: ', receipt)
-            sellNFT(informations)
-        });
-        sentTx.on("error", err => {
-            console.log('error BID:', err)
-        });
-    }).catch((err) => {
-        console.log('error sign promise:', err)
-    });
+            signPromise.then((signedTx) => {
+                console.log(signedTx)
+                // raw transaction string may be available in .raw or
+                // .rawTransaction depending on which signTransaction
+                // function was called
+                let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+                sentTx.on("receipt", receipt => {
+                    console.log('SUCCESS BUY: ', receipt)
+                    sellNFT(informations)
+                });
+                sentTx.on("error", err => {
+                    console.log('error BID:', err)
+                });
+            }).catch((err) => {
+                console.log('error sign promise:', err)
+            });
+        })
+    // const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    //
+    // signPromise.then((signedTx) => {
+    //     console.log(signedTx)
+    //     // raw transaction string may be available in .raw or
+    //     // .rawTransaction depending on which signTransaction
+    //     // function was called
+    //     let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+    //     sentTx.on("receipt", receipt => {
+    //         console.log('SUCCESS BUY: ', receipt)
+    //         sellNFT(informations)
+    //     });
+    //     sentTx.on("error", err => {
+    //         console.log('error BID:', err)
+    //     });
+    // }).catch((err) => {
+    //     console.log('error sign promise:', err)
+    // });
 }
 
 async function sellNFT(informations) {

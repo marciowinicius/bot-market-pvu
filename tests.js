@@ -231,7 +231,6 @@ const getPlantInformations = async function (plantId, price, tokenId) {
 
     let leHour = parseFloat(parseFloat(plantPvuRarityLE.le) / parseFloat(pvuDataInformation.cycle))
 
-    console.log(plantPvuTypeNumber)
     let informations = {
         pvu_id: plantId,
         pvu_token_id: tokenId,

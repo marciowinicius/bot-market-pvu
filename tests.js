@@ -248,7 +248,7 @@ async function buyNFT(informations, transaction) {
         to: contractAddressBid,
         // optional if you want to specify the gas limit
         gas: web3.utils.toHex(300000),
-        gasPrice: web3.utils.toHex(await web3.utils.toWei('6', 'gwei')),
+        gasPrice: web3.utils.toHex(await web3.utils.toWei('5', 'gwei')),
         // nonce: 58,
         // optional if you are invoking say a payable function
         // value: web3.utils.toHex(informations.reseller_price),
@@ -258,6 +258,7 @@ async function buyNFT(informations, transaction) {
     web3.eth.getTransactionReceipt(transaction.hash)
         .then(function (result) {
             console.log('transaction confirmed.')
+            sleep(3000)
             let signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
             signPromise.then((signedTx) => {

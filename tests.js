@@ -259,7 +259,6 @@ async function buyNFT(informations, transaction) {
     web3.eth.getTransactionReceipt(transaction.hash)
         .then(function (result) {
             console.log('transaction confirmed.')
-            sleep(1000)
             let signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
             signPromise.then((signedTx) => {

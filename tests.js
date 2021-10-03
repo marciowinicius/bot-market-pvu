@@ -9,7 +9,7 @@ const abiDecoder = require('abi-decoder');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const providerWss = 'wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws';
+const providerWss = 'wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20';
 const web3 = new Web3(providerWss);
 
 // ADDRESS READ
@@ -20,13 +20,14 @@ const addressReadAndSellAuction = process.env.CONTRACT_ADDRESS
 // ADDRESS BID
 const contractAddressBid = process.env.CONTRACT_ADDRESS_BID
 const abiBid = require("./abi_bid.json");
-const contractBid = new web3.eth.Contract(abiBid, contractAddressBid);
+const web3Bid = new Web3('https://bsc-dataseed1.binance.org:443');
+const contractBid = new web3Bid.eth.Contract(abiBid, contractAddressBid);
 
 // ACCOUNT BID
 const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
-const account = web3.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
-web3.eth.accounts.wallet.add(account);
-web3.eth.defaultAccount = account.address;
+const account = web3Bid.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
+web3Bid.eth.accounts.wallet.add(account);
+web3Bid.eth.defaultAccount = account.address;
 
 // const localKeyProvider = new HDWalletProvider({
 //     privateKeys: [privateKeyAccountBid],
@@ -254,8 +255,8 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3.utils.toHex(300000),
-        gasPrice: web3.utils.toHex(await web3.utils.toWei('5', 'gwei')),
+        gas: web3Bid.utils.toHex(300000),
+        gasPrice: web3Bid.utils.toHex(await web3Bid.utils.toWei('5', 'gwei')),
         contractAddress: contractAddressBid,
         // nonce: 58,
         // optional if you are invoking say a payable function
@@ -263,17 +264,17 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
-    const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    const signPromise = web3Bid.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
     signPromise.then((signedTx) => {
         console.log(signedTx)
         // raw transaction string may be available in .raw or
         // .rawTransaction depending on which signTransaction
         // function was called
-        let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        let sentTx = web3Bid.eth.sendSignedTransaction(signedTx.rawTransaction);
         sentTx.on("receipt", receipt => {
             console.log('SUCCESS BUY: ', receipt)
-            sellNFT(informations)
+            // sellNFT(informations)
         });
         sentTx.on("error", err => {
             console.log('error BID:', err)

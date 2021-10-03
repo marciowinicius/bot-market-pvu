@@ -14,7 +14,8 @@ const {Webhook, MessageBuilder} = require('discord-webhook-node');
 const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
 
-const PVU_FRONT_URL = 'https://marketplace.plantvsundead.com/offering/bundle#/plant/'
+const PVU_FRONT_URL_COMMON = 'https://marketplace.plantvsundead.com/offering/bundle#/plant/'
+const PVU_FRONT_URL_MOTHER = 'https://marketplace.plantvsundead.com/offering/bundle#/mother-tree/'
 const PRICE_PVU_OUT = 550
 const MONTH_HOURS = 720
 const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'
@@ -240,7 +241,7 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         pvu_price: realPrice,
         pvu_le_hour_price: realPrice / leHour,
         discord_alert: 0,
-        pvu_url: PVU_FRONT_URL + plantId,
+        pvu_url: plantPvuIdNumber == 1 ? PVU_FRONT_URL_COMMON + plantId : PVU_FRONT_URL_MOTHER + plantId,
         rent: (leHour * MONTH_HOURS) / PRICE_PVU_OUT / realPrice,
         plant_type: pvuDataInformation.element,
         icon_url: null,

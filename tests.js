@@ -2,13 +2,15 @@ require('dotenv').config()
 
 const os = require("os");
 const Web3 = require("web3");
+const abiDecoder = require('abi-decoder');
+// const HDWalletProvider = require("@truffle/hdwallet-provider");
 
 // const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const web3 = new Web3('wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/');
-const abiDecoder = require('abi-decoder');
+const providerWss = 'wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws';
+const web3 = new Web3(providerWss);
 
 // ADDRESS READ
 const abiReadAndSellAuction = require("./abi.json");
@@ -25,6 +27,11 @@ const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 const account = web3.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
 web3.eth.accounts.wallet.add(account);
 web3.eth.defaultAccount = account.address;
+
+// const localKeyProvider = new HDWalletProvider({
+//     privateKeys: [privateKeyAccountBid],
+//     providerOrUrl: provider,
+// });
 
 const {Webhook, MessageBuilder} = require('discord-webhook-node');
 
@@ -256,46 +263,24 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
-    web3.eth.getTransactionReceipt(transaction.hash)
-        .then(function (result) {
-            console.log('transaction confirmed.')
-            let signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
-            signPromise.then((signedTx) => {
-                console.log(signedTx)
-                // raw transaction string may be available in .raw or
-                // .rawTransaction depending on which signTransaction
-                // function was called
-                let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-                sentTx.on("receipt", receipt => {
-                    console.log('SUCCESS BUY: ', receipt)
-                    sellNFT(informations)
-                });
-                sentTx.on("error", err => {
-                    console.log('error BID:', err)
-                });
-            }).catch((err) => {
-                console.log('error sign promise:', err)
-            });
-        })
-    // const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
-    //
-    // signPromise.then((signedTx) => {
-    //     console.log(signedTx)
-    //     // raw transaction string may be available in .raw or
-    //     // .rawTransaction depending on which signTransaction
-    //     // function was called
-    //     let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
-    //     sentTx.on("receipt", receipt => {
-    //         console.log('SUCCESS BUY: ', receipt)
-    //         sellNFT(informations)
-    //     });
-    //     sentTx.on("error", err => {
-    //         console.log('error BID:', err)
-    //     });
-    // }).catch((err) => {
-    //     console.log('error sign promise:', err)
-    // });
+    signPromise.then((signedTx) => {
+        console.log(signedTx)
+        // raw transaction string may be available in .raw or
+        // .rawTransaction depending on which signTransaction
+        // function was called
+        let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
+        sentTx.on("receipt", receipt => {
+            console.log('SUCCESS BUY: ', receipt)
+            sellNFT(informations)
+        });
+        sentTx.on("error", err => {
+            console.log('error BID:', err)
+        });
+    }).catch((err) => {
+        console.log('error sign promise:', err)
+    });
 }
 
 async function sellNFT(informations) {

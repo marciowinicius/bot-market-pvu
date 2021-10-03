@@ -28,7 +28,7 @@ async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
     }).on("data", function (txHash) {
-        console.log(txHash)
+        // console.log(txHash)
         web3.eth.getTransaction(txHash, (err, transaction) => {
             if (transaction) {
                 let cache = myCache.get("transaction_" + transaction.hash);
@@ -230,6 +230,8 @@ const getPlantInformations = async function (plantId, price, tokenId) {
     let plantPvuRarityLE = getPlantPvuRarityLE(plantPvuRarityNumber, pvuDataInformation)
 
     let leHour = parseFloat(parseFloat(plantPvuRarityLE.le) / parseFloat(pvuDataInformation.cycle))
+
+    console.log(plantPvuTypeNumber)
     let informations = {
         pvu_id: plantId,
         pvu_token_id: tokenId,
@@ -505,7 +507,7 @@ const getPlantPvuRarityLE = function (rarityNumber, pvuDataInformation) {
 }
 
 const getPlantPvuTypeNumber = function (plantId) {
-    return plantId.charAt(0)
+    return parseInt(plantId.charAt(0))
 }
 
 const getPlantPvuIdNumber = function (plantId) {

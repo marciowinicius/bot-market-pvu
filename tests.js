@@ -243,7 +243,7 @@ async function buyNFT(informations, transaction) {
 
     let tx = {
         // this could be provider.addresses[0] if it exists
-        from: account.address,
+        // from: account.address,
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit

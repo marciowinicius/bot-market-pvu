@@ -249,6 +249,7 @@ async function buyNFT(informations, transaction) {
         // optional if you want to specify the gas limit
         gas: web3.utils.toHex(300000),
         gasPrice: web3.utils.toHex(await web3.utils.toWei('5', 'gwei')),
+        contractAddress: contractAddressBid,
         // nonce: 58,
         // optional if you are invoking say a payable function
         // value: web3.utils.toHex(informations.reseller_price),

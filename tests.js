@@ -14,8 +14,8 @@ const {Webhook, MessageBuilder} = require('discord-webhook-node');
 const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
 
-const PVU_FRONT_URL_COMMON = 'https://marketplace.plantvsundead.com/offering/bundle#/plant/'
-const PVU_FRONT_URL_MOTHER = 'https://marketplace.plantvsundead.com/offering/bundle#/mother-tree/'
+const PVU_FRONT_URL_COMMON = 'https://marketplace.plantvsundead.com/#/plants/'
+const PVU_FRONT_URL_MOTHER = 'https://marketplace.plantvsundead.com/#/mother-tree/'
 const PRICE_PVU_OUT = 550
 const MONTH_HOURS = 720
 const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'

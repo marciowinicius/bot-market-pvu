@@ -465,56 +465,6 @@ async function analyzeNFT(informations) {
     return informations
 }
 
-async function sendDiscordAlert(webhook, informations) {
-    let discordMessageOptions = getDefaultObjDiscordMessage(webhook, informations)
-    let hook = new Webhook(webhook.webhook);
-    const embed = new MessageBuilder()
-        .setTitle(discordMessageOptions.title)
-        .setColor(discordMessageOptions.color)
-        .setDescription(discordMessageOptions.description)
-        .setText(discordMessageOptions.content)
-
-    hook.send(embed);
-}
-
-function getDefaultObjDiscordMessage(webhook, informations) {
-    return {
-        content: webhook.free_trial ? ":warning: Get higher ROI notifications check out our #:bookmark:-plans" : '',
-        title: "A good NFT opportunity appeared!",
-        description: getDefaultDiscordMessage(webhook, informations),
-        color: '7506394'
-    }
-}
-
-function getDefaultDiscordMessage(webhook, informations) {
-    let priceFixed = informations.pvu_price.toFixed(2)
-    let commonOrMother = informations.pvu_type == 1 ? 'COMMON' : 'MOTHER'
-    let leHourFixed = informations.le_hour.toFixed(2)
-    let grossProfit = leHourFixed * MONTH_HOURS / PRICE_PVU_OUT
-    grossProfit = grossProfit.toFixed(2)
-    let monthlyROI = informations.rent * 100
-    let monthlyROIFixed = monthlyROI.toFixed(2)
-    let message = "PRICE (PVU): " + priceFixed + os.EOL + "TYPE: " + commonOrMother + os.EOL + "ELEMENT: " + informations.plant_type + os.EOL + "RARITY: " + informations.rarity + os.EOL + "LE: " + informations.le + "/" + informations.hour + " " + leHourFixed + " per hour" + os.EOL + "GROSS PROFIT: " + grossProfit + " PVU per month" + os.EOL + "MONTHLY RETURN OF INVESTMENT: " + monthlyROIFixed + "%" + os.EOL + "***(Base calculation " + PRICE_PVU_OUT + ":1 PVU)***" + os.EOL + "URL: " + informations.pvu_url + (webhook.free_trial ? os.EOL : '')
-
-    if (webhook.free_trial) {
-        message = message + getExtraMessage()
-    }
-
-    if (webhook.direct_bsc) {
-        message = message + getBscMessage(informations)
-    }
-
-    return message
-}
-
-function getBscMessage(informations) {
-    return os.EOL + os.EOL + "[Token ID: " + informations.pvu_token_id + "]" + os.EOL + "[Amount: " + informations.price + "]" + os.EOL + "BUY ON BSC: " + BSC_URL
-}
-
-function getExtraMessage() {
-    return os.EOL + ":warning: Get higher ROI notifications check out our #:bookmark:-plans"
-}
-
 function parsePrice(price) {
     let priceDecimals = price.substr(price.length - 18)
     let priceDozens = price.substr(0, price.length - 18)

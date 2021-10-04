@@ -255,7 +255,7 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3Bid.utils.toHex(300000),
+        gas: web3Bid.utils.toHex(500000),
         gasPrice: web3Bid.utils.toHex(await web3Bid.utils.toWei('5', 'gwei')),
         contractAddress: contractAddressBid,
         // nonce: 58,
@@ -264,6 +264,10 @@ async function buyNFT(informations, transaction) {
         // this encodes the ABI of the method and the arguements
         data: contractBidData
     };
+
+    // let txReceipt = await getTransactionReceipt(transaction.hash)
+    // console.log('tx receipt test:', txReceipt)
+
     const signPromise = web3Bid.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
     signPromise.then((signedTx) => {
@@ -282,6 +286,15 @@ async function buyNFT(informations, transaction) {
     }).catch((err) => {
         console.log('error sign promise:', err)
     });
+}
+
+async function getTransactionReceipt(hash) {
+    let txReceipt = await web3.eth.getTransactionReceipt(hash)
+    console.log('tx receipt:', txReceipt)
+    if (!txReceipt){
+        await getTransactionReceipt(hash)
+    }
+    return txReceipt
 }
 
 async function sellNFT(informations) {

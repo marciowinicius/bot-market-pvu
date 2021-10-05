@@ -10,6 +10,7 @@
     "mysql2": "^2.3.0",
     "node-cache": "^5.1.2",
     "sequelize": "^6.6.5",
+    "truffle": "^5.4.13",
     "web3": "^1.5.2"
   },
   "scripts": {

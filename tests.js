@@ -1,15 +1,16 @@
 require('dotenv').config()
 
-const os = require("os");
 const Web3 = require("web3");
 const abiDecoder = require('abi-decoder');
 // const HDWalletProvider = require("@truffle/hdwallet-provider");
+const Provider = require('@truffle/hdwallet-provider');
+const clockAuctionContract = require('./build/contracts/ClockAuction.json');
 
 // const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const providerWss = 'wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20';
+const providerWss = 'wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws';
 const web3 = new Web3(providerWss);
 
 // ADDRESS READ
@@ -20,11 +21,18 @@ const addressReadAndSellAuction = process.env.CONTRACT_ADDRESS
 // ADDRESS BID
 const contractAddressBid = process.env.CONTRACT_ADDRESS_BID
 const abiBid = require("./abi_bid.json");
-const web3Bid = new Web3('https://bsc-dataseed1.binance.org:443');
-const contractBid = new web3Bid.eth.Contract(abiBid, contractAddressBid);
+// const web3Bid = new Web3('https://bsc-dataseed1.binance.org:443');
+// const contractBid = new web3Bid.eth.Contract(abiBid, contractAddressBid);
 
 // ACCOUNT BID
 const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
+const provider = new Provider(privateKeyAccountBid, 'https://bsc-dataseed1.binance.org:443');
+const web3Bid = new Web3(provider);
+// const networkId = await web3Bid.eth.net.getId();
+const contractBid = new web3Bid.eth.Contract(
+    abiBid,
+    contractAddressBid
+);
 const account = web3Bid.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
 web3Bid.eth.accounts.wallet.add(account);
 web3Bid.eth.defaultAccount = account.address;
@@ -242,6 +250,18 @@ function sleep(ms) {
     });
 }
 
+// async function buyNFT(informations, transaction) {
+//     contractBid.methods.bid(informations.pvu_token_id, informations.price)
+//         .send({
+//             from: account.address,
+//             gas: web3Bid.utils.toHex(500000)
+//         }).then(function (result) {
+//             console.log('SUCCESS BUY: ', result)
+//         }).catch(function (err) {
+//             console.log('ERROR BUY: ', err)
+//         });
+// }
+
 async function buyNFT(informations, transaction) {
     // let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
     // var block = await web3.eth.getBlock("latest");
@@ -255,7 +275,7 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3Bid.utils.toHex(500000),
+        gas: web3Bid.utils.toHex(300000),
         gasPrice: web3Bid.utils.toHex(await web3Bid.utils.toWei('5', 'gwei')),
         contractAddress: contractAddressBid,
         // nonce: 58,
@@ -286,15 +306,6 @@ async function buyNFT(informations, transaction) {
     }).catch((err) => {
         console.log('error sign promise:', err)
     });
-}
-
-async function getTransactionReceipt(hash) {
-    let txReceipt = await web3.eth.getTransactionReceipt(hash)
-    console.log('tx receipt:', txReceipt)
-    if (!txReceipt){
-        await getTransactionReceipt(hash)
-    }
-    return txReceipt
 }
 
 async function sellNFT(informations) {

@@ -19,6 +19,7 @@ const PVU_FRONT_URL_MOTHER = 'https://marketplace.plantvsundead.com/#/mother-tre
 const PRICE_PVU_OUT = 550
 const MONTH_HOURS = 720
 const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'
+const ICON_URL = 'https://pvuresources.s3.ap-southeast-2.amazonaws.com/icon/'
 
 const NodeCache = require("node-cache");
 const myCache = new NodeCache();
@@ -245,7 +246,7 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         pvu_url: plantPvuTypeNumber === 1 ? PVU_FRONT_URL_COMMON + plantId : PVU_FRONT_URL_MOTHER + plantId,
         rent: (leHour * MONTH_HOURS) / PRICE_PVU_OUT / realPrice,
         plant_type: pvuDataInformation.element,
-        icon_url: null,
+        icon_url: ICON_URL + (plantPvuTypeNumber === 1 ? 'plant/' : 'mtree/') + pvuDataInformation.pvu_plant_id + '_1.png',
         rarity: plantPvuRarityLE.rarity,
         pvu_json: null,
         price: price,
@@ -424,6 +425,7 @@ async function sendDiscordAlert(webhook, informations) {
         .setColor(discordMessageOptions.color)
         .setDescription(discordMessageOptions.description)
         .setText(discordMessageOptions.content)
+        .setThumbnail(informations.icon_url)
 
     hook.send(embed);
 }

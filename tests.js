@@ -282,7 +282,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_ROI_10_TO_25,
+            webhook: "https://discord.com/api/webhooks/892075896079544352/nX6_6VGNJ6hjxQ4FwBJDB0z9BUbYI3Ie8rCDVXYx6PRSN0YBt8FhSxe8NSViI4NVuCdH",
             free_trial: true,
             direct_bsc: false,
             disable: false
@@ -295,7 +295,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_ROI_ABOVE_40,
+            webhook: "https://discord.com/api/webhooks/891442569635037195/eYxKTqbPbPmKtGR8SiLPLUmV2_GNEICywIiMWwGlgQajZEfHuoJ8TGWiybC29OQPYHW6",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -307,7 +307,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_DARK,
+            webhook: "https://discord.com/api/webhooks/891717089704939520/dOtZLRkP0XvN-dP4MRfn7jz65GAhhVgKxS3-rG9bIYprpcW1-Brzql2GSvasrPN_s7q5",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -319,7 +319,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_LIGHT,
+            webhook: "https://discord.com/api/webhooks/891717194260578314/NBFg2dCGVf3H_-Yw1YTNWxdhw0mnthfId0ynNO8PBR4Q55VoPCs_7s04irj6I7H61-wz",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -331,7 +331,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_FIRE,
+            webhook: "https://discord.com/api/webhooks/891717307519356998/qsPO2D2-GChuKrY-fFIEK3k6DMt2DBjaWt8mohMG0QuI0CDASWZ-q513RT1jCzezOSMH",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -343,7 +343,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_WATER,
+            webhook: "https://discord.com/api/webhooks/891717408673370152/qqbiwpx5bvf3cdW64cpbCSGHCK9gW0SYRwW40ggg-He84YkzNxCXfi-IegST2wufbMhT",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -355,7 +355,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_ICE,
+            webhook: "https://discord.com/api/webhooks/891717497420660746/j9QTGC53wP90AmEwmg41vphAyuVxjPTlhPFbJLPatn3BW0WMQYMsLLQTM9obUH6OBdGl",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -367,7 +367,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_ELECTRIC,
+            webhook: "https://discord.com/api/webhooks/891717611644137553/TkATis7-rgB-CCzSj7PjayXLmCix5tBs5508ppnIzL13vzX1uftuio2QJFzG5Ecj3OaN",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -379,7 +379,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_METAL,
+            webhook: "https://discord.com/api/webhooks/891726564927086673/VD27MZmcLNbh9nrtOPcdx6oHvfo9zQTN6gutl5rf_hHv2MLNAh1olHTTWH8HhMSRQfFf",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -391,7 +391,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_WIND,
+            webhook: "https://discord.com/api/webhooks/891717770629230594/dcc2uBtrEsz7i5DQDGtOOQqMLygrYzSa3si-zD2XmyA18G-4R9SagSsLUqtkW_MlOP0m",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -403,7 +403,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     ) {
         informations.discord_alert = 1
         webhook = {
-            webhook: process.env.WEBHOOK_LOWEST_PRICE_PARASITE,
+            webhook: "https://discord.com/api/webhooks/891717900547817492/ckb0wHEjoxPlGuvf-NRcWAcY8z7Rlr7aDfFo_RRpLEpjZnxTKrE1btPWWYDZ507wZKts",
             free_trial: false,
             direct_bsc: false,
             disable: false
@@ -411,6 +411,7 @@ async function analyzeNFTAndSendDiscord(informations) {
     }
 
     if (webhook) {
+        console.log(webhook)
         sendDiscordAlert(webhook, informations)
     }
 

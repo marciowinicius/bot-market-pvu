@@ -478,7 +478,7 @@ async function sendDiscordAlert(webhook, informations) {
         .setText(discordMessageOptions.content)
         .setThumbnail(informations.icon_url)
 
-    hook.send(embed).catch(err => console.log(err, informations));
+    hook.send(embed).catch(err => console.log(err, informations, webhook));
 }
 
 function getDefaultObjDiscordMessage(webhook, informations) {

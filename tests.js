@@ -192,7 +192,7 @@ async function processInput(input) {
 
 async function getPvuData(tokenId) {
     return await sequelize
-        .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 3 DAY);",
+        .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY);",
             {
                 type: QueryTypes.SELECT,
                 plain: true,

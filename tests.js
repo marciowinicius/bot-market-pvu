@@ -253,7 +253,7 @@ const getPlantInformations = async function (plantId, price, tokenId) {
     }
 
     informations = await analyzeNFTLowPriceAndSendDiscord(informations)
-    analyzeNFTRarityAndSendDiscord(informations)
+    // analyzeNFTRarityAndSendDiscord(informations)
 
     savePvuDataInformation(informations)
 }

@@ -425,7 +425,7 @@ async function sendDiscordAlert(webhook, informations) {
         .setColor(discordMessageOptions.color)
         .setDescription(discordMessageOptions.description)
         .setText(discordMessageOptions.content)
-        // .setThumbnail(informations.icon_url)
+        .setThumbnail(informations.icon_url)
 
     hook.send(embed);
 }

@@ -434,7 +434,7 @@ function getDefaultObjDiscordMessage(webhook, informations) {
     return {
         content: webhook.free_trial ? ":warning: Get higher ROI notifications, check out our #:bookmark:-plans" : '',
         title: "A good NFT opportunity appeared!",
-        description: 'test',
+        description: getDefaultDiscordMessage(webhook, informations),
         color: '7506394'
     }
 }

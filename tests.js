@@ -289,18 +289,18 @@ async function analyzeNFTAndSendDiscord(informations) {
         }
     }
 
-    if (informations.status == 1 && informations.hour <= 96 && informations.le_hour >= 10
-        && informations.pvu_le_hour_price != 99.00000000 && informations.pvu_price != 99.99999999
-        && informations.rent >= 0.4 && informations.plant_type != 'LIGHT'
-    ) {
-        informations.discord_alert = 1
-        webhook = {
-            webhook: process.env.WEBHOOK_ROI_ABOVE_40,
-            free_trial: true,
-            direct_bsc: false,
-            disable: false
-        }
-    }
+    // if (informations.status == 1 && informations.hour <= 96 && informations.le_hour >= 10
+    //     && informations.pvu_le_hour_price != 99.00000000 && informations.pvu_price != 99.99999999
+    //     && informations.rent >= 0.4 && informations.plant_type != 'LIGHT'
+    // ) {
+    //     informations.discord_alert = 1
+    //     webhook = {
+    //         webhook: process.env.WEBHOOK_ROI_ABOVE_40,
+    //         free_trial: true,
+    //         direct_bsc: false,
+    //         disable: false
+    //     }
+    // }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
         && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'

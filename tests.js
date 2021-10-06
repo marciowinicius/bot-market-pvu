@@ -429,8 +429,8 @@ async function sendDiscordAlert(webhook, informations) {
 
     console.log(embed.getJSON())
 
-    // let send = await hook.send(embed);
-    // console.log(send)
+    let send = await hook.send(embed);
+    console.log(send)
 }
 
 function getDefaultObjDiscordMessage(webhook, informations) {

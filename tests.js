@@ -252,7 +252,8 @@ const getPlantInformations = async function (plantId, price, tokenId) {
         price: price,
     }
 
-    informations = await analyzeNFTAndSendDiscord(informations)
+    informations = await analyzeNFTLowPriceAndSendDiscord(informations)
+    analyzeNFTRarityAndSendDiscord(informations)
 
     savePvuDataInformation(informations)
 }
@@ -270,8 +271,58 @@ async function getBasePriceByElement(element) {
         );
 }
 
+async function analyzeNFTRarityAndSendDiscord(informations) {
+    let webhook = null
 
-async function analyzeNFTAndSendDiscord(informations) {
+    if (informations.status == 1 && informations.rarity == 'COMMON' && informations.rent >= 0.25
+    ) {
+        webhook = {
+            webhook: process.env.WEBHOOK_COMMON_GOOD,
+            free_trial: false,
+            direct_bsc: false,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.rarity == 'UNCOMMON' && informations.rent >= 0.25
+    ) {
+        webhook = {
+            webhook: process.env.WEBHOOK_UNCOMMON,
+            free_trial: false,
+            direct_bsc: false,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.rarity == 'RARE' && informations.rent >= 0.25
+    ) {
+        webhook = {
+            webhook: process.env.WEBHOOK_RARE,
+            free_trial: false,
+            direct_bsc: false,
+            disable: false
+        }
+    }
+
+    if (informations.status == 1 && informations.rarity == 'MYTHIC' && informations.rent >= 0.25
+    ) {
+        webhook = {
+            webhook: process.env.WEBHOOK_MYTHIC,
+            free_trial: false,
+            direct_bsc: false,
+            disable: false
+        }
+    }
+
+    if (webhook) {
+        sendDiscordAlert(webhook, informations)
+    }
+
+    return informations
+}
+
+
+async function analyzeNFTLowPriceAndSendDiscord(informations) {
     let webhook = null
     let basePriceInformation = await getBasePriceByElement(informations.plant_type)
     let basePrice = basePriceInformation ? basePriceInformation.price : 35

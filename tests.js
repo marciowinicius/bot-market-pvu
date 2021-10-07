@@ -2,6 +2,7 @@ require('dotenv').config()
 
 const os = require("os");
 const Web3 = require("web3");
+const axios = require('axios')
 
 const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 const abiDecoder = require('abi-decoder');
@@ -427,7 +428,19 @@ async function sendDiscordAlert(webhook, informations) {
         .setText(discordMessageOptions.content)
         .setThumbnail(informations.icon_url)
 
-    hook.send(embed);
+    let json = embed.getJSON()
+
+    axios
+        .post(webhook.webhook, {
+            embeds: json.embeds
+        })
+        .then(res => {
+            console.log(`statusCode test: ${res.status}`)
+            console.log(res)
+        })
+        .catch(error => {
+            console.error(error)
+        })
 }
 
 function getDefaultObjDiscordMessage(webhook, informations) {

@@ -428,8 +428,7 @@ async function sendDiscordAlert(webhook, informations) {
         .setThumbnail(informations.icon_url)
 
     let json = embed.getJSON()
-
-    axios.defaults.headers.common['CLIENT_IP'] = (Math.floor(Math.random() * 255) + 1) + "." + (Math.floor(Math.random() * 255)) + "." + (Math.floor(Math.random() * 255)) + "." + (Math.floor(Math.random() * 255));
+    
     axios
         .post(webhook.webhook, {
             embeds: json.embeds

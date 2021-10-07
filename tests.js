@@ -420,7 +420,6 @@ async function analyzeNFTAndSendDiscord(informations) {
 
 async function sendDiscordAlert(webhook, informations) {
     let discordMessageOptions = getDefaultObjDiscordMessage(webhook, informations)
-    let hook = new Webhook(webhook.webhook);
     const embed = new MessageBuilder()
         .setTitle(discordMessageOptions.title)
         .setColor(discordMessageOptions.color)
@@ -430,6 +429,7 @@ async function sendDiscordAlert(webhook, informations) {
 
     let json = embed.getJSON()
 
+    axios.defaults.headers.common['CLIENT_IP'] = (Math.floor(Math.random() * 255) + 1) + "." + (Math.floor(Math.random() * 255)) + "." + (Math.floor(Math.random() * 255)) + "." + (Math.floor(Math.random() * 255));
     axios
         .post(webhook.webhook, {
             embeds: json.embeds

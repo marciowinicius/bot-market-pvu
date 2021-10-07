@@ -7,6 +7,7 @@
     "axios": "^0.21.4",
     "discord-webhook-node": "^1.1.8",
     "dotenv": "^10.0.0",
+    "moralis": "0.0.69",
     "mysql2": "^2.3.0",
     "node-cache": "^5.1.2",
     "sequelize": "^6.6.5",

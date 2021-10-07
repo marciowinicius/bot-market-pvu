@@ -2,9 +2,15 @@ require('dotenv').config()
 
 const Web3 = require("web3");
 const abiDecoder = require('abi-decoder');
+const HDWalletProvider = require("@truffle/hdwallet-provider");
+//load single private key as string
+let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "https://bsc-dataseed1.binance.org:443");
 // const HDWalletProvider = require("@truffle/hdwallet-provider");
-const Provider = require('@truffle/hdwallet-provider');
-const clockAuctionContract = require('./build/contracts/ClockAuction.json');
+// const Provider = require('@truffle/hdwallet-provider');
+// const clockAuctionContract = require('./build/contracts/ClockAuction.json');
+// const Moralis  = require('moralis/node');
+// Moralis.initialize("dXdrc5TOKtYEQnEqUaEkfOwIkIOywRfGuDQs68VW", "", "wxqB3Bq7vgQixlS0bgUfNsqGgnn3jvQCOmizMdM8");
+// Moralis.serverURL = 'https://bplursgojzen.grandmoralis.com:2053/server'
 
 // const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
@@ -26,8 +32,8 @@ const abiBid = require("./abi_bid.json");
 
 // ACCOUNT BID
 const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
-const provider = new Provider(privateKeyAccountBid, 'https://bsc-dataseed1.binance.org:443');
-const web3Bid = new Web3(provider);
+// const provider = new Provider(privateKeyAccountBid, 'https://bsc-dataseed1.binance.org:443');
+const web3Bid = new Web3(providerBid);
 // const networkId = await web3Bid.eth.net.getId();
 const contractBid = new web3Bid.eth.Contract(
     abiBid,
@@ -282,7 +288,8 @@ async function buyNFT(informations, transaction) {
         // optional if you are invoking say a payable function
         // value: web3.utils.toHex(informations.reseller_price),
         // this encodes the ABI of the method and the arguements
-        data: contractBidData
+        data: contractBidData,
+        handleRevert: true
     };
 
     // let txReceipt = await getTransactionReceipt(transaction.hash)

@@ -3,7 +3,7 @@ require('dotenv').config()
 const os = require("os");
 const Web3 = require("web3");
 
-const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
+const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 const abiDecoder = require('abi-decoder');
 const abi = require("./abi.json");
 abiDecoder.addABI(abi);

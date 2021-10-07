@@ -9,7 +9,7 @@ const abi = require("./abi.json");
 abiDecoder.addABI(abi);
 const address = process.env.CONTRACT_ADDRESS
 
-const webhook = require('webhook-discord');
+const {Webhook, MessageBuilder} = require('discord-webhook-node');
 
 const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
@@ -419,15 +419,15 @@ async function analyzeNFTAndSendDiscord(informations) {
 
 async function sendDiscordAlert(webhook, informations) {
     let discordMessageOptions = getDefaultObjDiscordMessage(webhook, informations)
-    let hook = new webhook.Webhook(webhook.webhook);
-    const msg = new webhook.MessageBuilder()
+    let hook = new Webhook(webhook.webhook);
+    const embed = new MessageBuilder()
         .setTitle(discordMessageOptions.title)
         .setColor(discordMessageOptions.color)
         .setDescription(discordMessageOptions.description)
         .setText(discordMessageOptions.content)
         .setThumbnail(informations.icon_url)
 
-    hook.send(msg);
+    hook.send(embed);
 }
 
 function getDefaultObjDiscordMessage(webhook, informations) {

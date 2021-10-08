@@ -4,7 +4,7 @@ const Web3 = require("web3");
 const abiDecoder = require('abi-decoder');
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 //load single private key as string
-let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws");
+let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/");
 let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "https://bsc-dataseed1.binance.org:443");
 // const HDWalletProvider = require("@truffle/hdwallet-provider");
 // const Provider = require('@truffle/hdwallet-provider');
@@ -16,8 +16,9 @@ let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 // const web3 = new Web3('wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20');
 // const web3 = new Web3('wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws');
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
+// const web3 = new Web3('wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/'); QUICK NODE
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const providerWss = 'wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws';
+const providerWss = 'wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/';
 const web3 = new Web3(providerWss);
 
 // ADDRESS READ

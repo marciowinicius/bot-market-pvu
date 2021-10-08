@@ -4,7 +4,8 @@ const Web3 = require("web3");
 const abiDecoder = require('abi-decoder');
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 //load single private key as string
-let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "https://bsc-dataseed1.binance.org:443");
+let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws");
+let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "https://bsc-dataseed1.binance.org:443");
 // const HDWalletProvider = require("@truffle/hdwallet-provider");
 // const Provider = require('@truffle/hdwallet-provider');
 // const clockAuctionContract = require('./build/contracts/ClockAuction.json');
@@ -34,6 +35,7 @@ const abiBid = require("./abi_bid.json");
 const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 // const provider = new Provider(privateKeyAccountBid, 'https://bsc-dataseed1.binance.org:443');
 const web3Bid = new Web3(providerBid);
+const web3Sell = new Web3(providerSell);
 // const networkId = await web3Bid.eth.net.getId();
 const contractBid = new web3Bid.eth.Contract(
     abiBid,
@@ -42,13 +44,6 @@ const contractBid = new web3Bid.eth.Contract(
 const account = web3Bid.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
 web3Bid.eth.accounts.wallet.add(account);
 web3Bid.eth.defaultAccount = account.address;
-
-// const localKeyProvider = new HDWalletProvider({
-//     privateKeys: [privateKeyAccountBid],
-//     providerOrUrl: provider,
-// });
-
-const {Webhook, MessageBuilder} = require('discord-webhook-node');
 
 const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
@@ -62,30 +57,6 @@ const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
 execute()
-
-// async function execute() {
-//     let options = {
-//         fromBlock: 0,
-//         address: contractAddressBid,    //Only get events from specific addresses
-//         topics: ['0xa9c8dfcda5664a5a124c713e386da27de87432d5b668e79458501eb296389ba7']                              //What topics to subscribe to
-//     };
-//
-//     let subscription = web3.eth.subscribe('logs', options, (err, event) => {
-//         if (!err) {
-//             console.log('error event:', event.transactionHash)
-//         }
-//     });
-//     subscription.on('data', event => {
-//         web3.eth.getTransaction(event.transactionHash, (err, transaction) => {
-//             if (transaction) {
-//                 processInput(transaction.input).catch(r => {
-//                     console.log("DEU RUIM")
-//                 })
-//             }
-//         })
-//     })
-// }
-
 async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
@@ -129,38 +100,38 @@ async function processInput(transaction) {
     if (tokenID === "") {
         return
     }
-    let pvuData = await getPvuData(tokenID)
-
-    if (pvuData) {
-        console.log('Já foi encontrado anteriormente e é revenda.')
-        return
-    }
+    // let pvuData = await getPvuData(tokenID)
+    //
+    // if (pvuData) {
+    //     console.log('Já foi encontrado anteriormente e é revenda.')
+    //     return
+    // }
 
     getPlantId(tokenID, price, transaction)
 }
 
-async function getPvuData(tokenId) {
-    let cache = await myCache.get("get_pvu_data_" + tokenId)
-
-    if (typeof cache !== "undefined") {
-        console.log('get_pvu_data_from_cache')
-        return cache
-    }
-
-    let query = await sequelize
-        .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY);",
-            {
-                type: QueryTypes.SELECT,
-                plain: true,
-                replacements: {pvu_token_id: tokenId},
-                raw: true
-            }
-        );
-
-    myCache.set("get_pvu_data_" + tokenId, query, 150)
-
-    return query
-}
+// async function getPvuData(tokenId) {
+//     let cache = await myCache.get("get_pvu_data_" + tokenId)
+//
+//     if (typeof cache !== "undefined") {
+//         console.log('get_pvu_data_from_cache')
+//         return cache
+//     }
+//
+//     let query = await sequelize
+//         .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY);",
+//             {
+//                 type: QueryTypes.SELECT,
+//                 plain: true,
+//                 replacements: {pvu_token_id: tokenId},
+//                 raw: true
+//             }
+//         );
+//
+//     myCache.set("get_pvu_data_" + tokenId, query, 150)
+//
+//     return query
+// }
 
 async function getPvuDataInformation(plantIdNumber) {
     let cache = await myCache.get("get_pvu_data_information_" + plantIdNumber)
@@ -256,18 +227,6 @@ function sleep(ms) {
     });
 }
 
-// async function buyNFT(informations, transaction) {
-//     contractBid.methods.bid(informations.pvu_token_id, informations.price)
-//         .send({
-//             from: account.address,
-//             gas: web3Bid.utils.toHex(500000)
-//         }).then(function (result) {
-//             console.log('SUCCESS BUY: ', result)
-//         }).catch(function (err) {
-//             console.log('ERROR BUY: ', err)
-//         });
-// }
-
 async function buyNFT(informations, transaction) {
     // let nonce = (await web3.eth.getTransactionCount(account.address)) + 1
     // var block = await web3.eth.getBlock("latest");
@@ -281,7 +240,7 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3Bid.utils.toHex(300000),
+        gas: web3Bid.utils.toHex(600000),
         gasPrice: web3Bid.utils.toHex(await web3Bid.utils.toWei('5', 'gwei')),
         contractAddress: contractAddressBid,
         // nonce: 58,
@@ -305,7 +264,7 @@ async function buyNFT(informations, transaction) {
         let sentTx = web3Bid.eth.sendSignedTransaction(signedTx.rawTransaction);
         sentTx.on("receipt", receipt => {
             console.log('SUCCESS BUY: ', receipt)
-            // sellNFT(informations)
+            sellNFT(informations)
         });
         sentTx.on("error", err => {
             console.log('error BID:', err)
@@ -317,21 +276,48 @@ async function buyNFT(informations, transaction) {
 
 async function sellNFT(informations) {
     let timeStampUTCNow = ((new Date((new Date(new Date().setDate(new Date().getDate() + 1000))).toUTCString())).getTime()) / 1000
-    contractReadAndSellAuction.methods.createSaleAuction(
+    let contractSellData = contractReadAndSellAuction.methods.createSaleAuction(
         informations.pvu_token_id,
         informations.reseller_price,
         informations.reseller_price,
         timeStampUTCNow
-    ).send({
-        from: web3.eth.defaultAccount,
-        gas: web3.utils.toHex(30000000)
-    }).then(function (result) {
-        console.log('SUCCESS SELL: ', result)
-    }).catch(function (err) {
-        console.log('error SELL: ', err)
+    ).encodeABI()
+
+    let tx = {
+        // this could be provider.addresses[0] if it exists
+        // from: account.address,
+        // target address, this could be a smart contract address
+        to: addressReadAndSellAuction,
+        // optional if you want to specify the gas limit
+        gas: web3Sell.utils.toHex(300000),
+        gasPrice: web3Sell.utils.toHex(await web3Sell.utils.toWei('5', 'gwei')),
+        contractAddress: addressReadAndSellAuction,
+        // nonce: 58,
+        // optional if you are invoking say a payable function
+        // value: web3.utils.toHex(informations.reseller_price),
+        // this encodes the ABI of the method and the arguements
+        data: contractSellData,
+        handleRevert: true
+    };
+
+    const signPromise = web3Sell.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+
+    signPromise.then((signedTx) => {
+        console.log(signedTx)
+        // raw transaction string may be available in .raw or
+        // .rawTransaction depending on which signTransaction
+        // function was called
+        let sentTx = web3Sell.eth.sendSignedTransaction(signedTx.rawTransaction);
+        sentTx.on("receipt", receipt => {
+            console.log('SUCCESS SELL: ', receipt)
+        });
+        sentTx.on("error", err => {
+            console.log('error SELL:', err)
+        });
+    }).catch((err) => {
+        console.log('error sign promise SELL:', err)
     });
 }
-
 
 async function getBasePriceByElement(element) {
     let cache = await myCache.get("get_base_price_by_element_" + element)
@@ -396,7 +382,8 @@ async function analyzeNFT(informations) {
     //     informations.buy = true
     // }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'FIRE'
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.le_hour >= 10
+        && informations.plant_type == 'FIRE'
     ) {
         informations.discord_alert = 1
         informations.buy = true
@@ -409,7 +396,8 @@ async function analyzeNFT(informations) {
     //     informations.buy = true
     // }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'WATER'
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.le_hour >= 9.5
+        && informations.plant_type == 'WATER'
     ) {
         informations.discord_alert = 1
         informations.buy = true
@@ -422,7 +410,8 @@ async function analyzeNFT(informations) {
     //     informations.buy = false
     // }
 
-    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'ICE'
+    if (informations.status == 1 && informations.pvu_price <= basePrice && informations.le_hour >= 9
+        && informations.plant_type == 'ICE'
     ) {
         informations.discord_alert = 1
         informations.buy = true

@@ -50,7 +50,7 @@ const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
 
 const PVU_FRONT_URL = 'https://marketplace.plantvsundead.com/offering/bundle#/plant/'
-const PRICE_PVU_OUT = 500
+const PRICE_PVU_OUT = 605
 const MONTH_HOURS = 720
 const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'
 

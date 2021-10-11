@@ -17,7 +17,7 @@ let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 // const web3 = new Web3('wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/'); QUICK NODE
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const providerWss = 'wss://bsc-ws-node.nariox.org:443';
+const providerWss = 'wss://bsc.getblock.io/mainnet/?api_key=4a86ff72-bb5b-403f-a077-9548a88b2b20';
 const web3 = new Web3(providerWss);
 
 // ADDRESS READ

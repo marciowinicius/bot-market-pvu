@@ -4,7 +4,6 @@ const Web3 = require("web3");
 const abiDecoder = require('abi-decoder');
 const HDWalletProvider = require("@truffle/hdwallet-provider");
 //load single private key as string
-let providerBid = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/");
 let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY, "https://bsc-dataseed1.binance.org:443");
 // const HDWalletProvider = require("@truffle/hdwallet-provider");
 // const Provider = require('@truffle/hdwallet-provider');
@@ -18,7 +17,7 @@ let providerSell = new HDWalletProvider(process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 // const web3 = new Web3('wss://bsc-ws-node.nariox.org:443');
 // const web3 = new Web3('wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/'); QUICK NODE
 // const web3 = new Web3('wss://odenir:TupiDoBrasil25$@apis-sj.ankr.com/wss/9725e57cc94147e9ae4b43481a5a7cdf/7450cdc071967672eb2581cd3e7ca9c6/binance/full/main');
-const providerWss = 'wss://blue-polished-wind.bsc.quiknode.pro/10f483f667f9efc864efd96c0cb778df7fca0cc5/';
+const providerWss = 'wss://speedy-nodes-nyc.moralis.io/955149a22a9a018aea8cdb00/bsc/mainnet/ws';
 const web3 = new Web3(providerWss);
 
 // ADDRESS READ
@@ -35,16 +34,16 @@ const abiBid = require("./abi_bid.json");
 // ACCOUNT BID
 const privateKeyAccountBid = '0x' + process.env.AUTO_BUY_ADDRESS_PRIVATE_KEY
 // const provider = new Provider(privateKeyAccountBid, 'https://bsc-dataseed1.binance.org:443');
-const web3Bid = new Web3(providerBid);
+// const web3Bid = new Web3(providerBid);
 const web3Sell = new Web3(providerSell);
 // const networkId = await web3Bid.eth.net.getId();
-const contractBid = new web3Bid.eth.Contract(
+const contractBid = new web3.eth.Contract(
     abiBid,
     contractAddressBid
 );
-const account = web3Bid.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
-web3Bid.eth.accounts.wallet.add(account);
-web3Bid.eth.defaultAccount = account.address;
+const account = web3.eth.accounts.privateKeyToAccount(privateKeyAccountBid);
+web3.eth.accounts.wallet.add(account);
+web3.eth.defaultAccount = account.address;
 
 const sequelize = require('./sequelize');
 const {QueryTypes} = require('sequelize');
@@ -52,12 +51,36 @@ const {QueryTypes} = require('sequelize');
 const PVU_FRONT_URL = 'https://marketplace.plantvsundead.com/offering/bundle#/plant/'
 const PRICE_PVU_OUT = 605
 const MONTH_HOURS = 720
-const BSC_URL = 'https://bscscan.com/address/0x926eae99527a9503eaDb4c9e927f21f84f20C977#writeContract'
 
 const NodeCache = require("node-cache");
 const myCache = new NodeCache();
 
 execute()
+
+// async function execute() {
+//     let options = {
+//         fromBlock: 0,
+//         address: contractAddressBid,    //Only get events from specific addresses
+//         topics: ['0xa9c8dfcda5664a5a124c713e386da27de87432d5b668e79458501eb296389ba7']                              //What topics to subscribe to
+//     };
+//
+//     let subscription = web3.eth.subscribe('logs', options, (err, event) => {
+//         if (err) {
+//             console.log('error event:', event.transactionHash)
+//         }
+//     });
+//     subscription.on('data', event => {
+//         // console.log(event)
+//         web3.eth.getTransaction(event.transactionHash, (err, transaction) => {
+//             if (transaction) {
+//                 processInput(transaction).catch(r => {
+//                     console.log("DEU RUIM: ", r)
+//                 })
+//             }
+//         })
+//     })
+// }
+
 async function execute() {
     web3.eth.subscribe('pendingTransactions', (err, txHash) => {
         if (err) console.log(err);
@@ -74,7 +97,6 @@ async function execute() {
 async function checkTransaction(transaction) {
     let cache = await myCache.get("transaction_" + transaction.hash)
     if ((typeof cache === "undefined") && transaction.to && transaction.to.toLowerCase() == addressReadAndSellAuction) {
-
         processInput(transaction).catch(r => {
             console.log("DEU RUIM")
         })
@@ -101,60 +123,325 @@ async function processInput(transaction) {
     if (tokenID === "") {
         return
     }
-    // let pvuData = await getPvuData(tokenID)
-    //
-    // if (pvuData) {
-    //     console.log('Já foi encontrado anteriormente e é revenda.')
-    //     return
-    // }
 
     getPlantId(tokenID, price, transaction)
 }
 
-// async function getPvuData(tokenId) {
-//     let cache = await myCache.get("get_pvu_data_" + tokenId)
-//
-//     if (typeof cache !== "undefined") {
-//         console.log('get_pvu_data_from_cache')
-//         return cache
-//     }
-//
-//     let query = await sequelize
-//         .query("SELECT * FROM pvus WHERE pvu_token_id = :pvu_token_id AND created_at >= DATE_SUB(CURDATE(), INTERVAL 1 DAY);",
-//             {
-//                 type: QueryTypes.SELECT,
-//                 plain: true,
-//                 replacements: {pvu_token_id: tokenId},
-//                 raw: true
-//             }
-//         );
-//
-//     myCache.set("get_pvu_data_" + tokenId, query, 150)
-//
-//     return query
-// }
-
-async function getPvuDataInformation(plantIdNumber) {
-    let cache = await myCache.get("get_pvu_data_information_" + plantIdNumber)
-
-    if (typeof cache !== "undefined") {
-        console.log('get_pvu_data_information_from_cache')
-        return cache
+function getPvuDataInformation(plantIdNumber) {
+    let pvuDataInformation = {
+        element: "FIRE",cycle: 48,common_base: 1,
+        uncommon_base: 1,rare_base: 1, mythic_base: 1, le_factor: 1
     }
 
-    let query = await sequelize
-        .query("SELECT * FROM pvu_nft_informations WHERE pvu_plant_id = :plant_id_number;",
-            {
-                type: QueryTypes.SELECT,
-                plain: true,
-                replacements: {plant_id_number: plantIdNumber},
-                raw: true
-            }
-        );
+    if (plantIdNumber == 0){
+        return {
+            element: "FIRE",cycle: 48,common_base: 400,
+            uncommon_base: 500,rare_base: 600, mythic_base: 800, le_factor: 1
+        }
+    }
 
-    myCache.set("get_pvu_data_information_" + plantIdNumber, query, 50000)
+    if (plantIdNumber == 1){
+        return {
+            element: "FIRE",cycle: 48,common_base: 400,
+            uncommon_base: 500,rare_base: 600, mythic_base: 800, le_factor: 1
+        }
+    }
 
-    return query
+    if (plantIdNumber == 2){
+        return {
+            element: "ICE",cycle: 60,common_base: 500,
+            uncommon_base: 610,rare_base: 680, mythic_base: 850, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 3){
+        return {
+            element: "ELETRIC",cycle: 48,common_base: 500,
+            uncommon_base: 610,rare_base: 680, mythic_base: 850, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 4){
+        return {
+            element: "WATER",cycle: 108,common_base: 950,
+            uncommon_base: 1100,rare_base: 1200, mythic_base: 1400, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 5){
+        return {
+            element: "WATER",cycle: 108,common_base: 950,
+            uncommon_base: 1100,rare_base: 1200, mythic_base: 1400, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 6){
+        return {
+            element: "ICE",cycle: 60,common_base: 500,
+            uncommon_base: 610,rare_base: 680, mythic_base: 850, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 7){
+        return {
+            element: "FIRE",cycle: 48,common_base: 400,
+            uncommon_base: 500,rare_base: 600, mythic_base: 800, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 8){
+        return {
+            element: "ELETRIC",cycle: 48,common_base: 500,
+            uncommon_base: 610,rare_base: 680, mythic_base: 850, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 9){
+        return {
+            element: "WIND",cycle: 72,common_base: 750,
+            uncommon_base: 860,rare_base: 950, mythic_base: 1150, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 10){
+        return {
+            element: "WIND",cycle: 72,common_base: 750,
+            uncommon_base: 860,rare_base: 950, mythic_base: 1150, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 11){
+        return {
+            element: "PARASITE",cycle: 120,common_base: 900,
+            uncommon_base: 1010,rare_base: 1000, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 12){
+        return {
+            element: "PARASITE",cycle: 120,common_base: 900,
+            uncommon_base: 1010,rare_base: 1000, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 13){
+        return {
+            element: "PARASITE",cycle: 120,common_base: 900,
+            uncommon_base: 1010,rare_base: 1000, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 14){
+        return {
+            element: "DARK",cycle: 192,common_base: 1200,
+            uncommon_base: 1900,rare_base: 2300, mythic_base: 2500, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 15){
+        return {
+            element: "ELETRIC",cycle: 48,common_base: 500,
+            uncommon_base: 600,rare_base: 680, mythic_base: 850, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 16){
+        return {
+            element: "WIND",cycle: 96,common_base: 900,
+            uncommon_base: 1010,rare_base: 1100, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 17){
+        return {
+            element: "FIRE",cycle: 72,common_base: 650,
+            uncommon_base: 760,rare_base: 900, mythic_base: 1100, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 18){
+        return {
+            element: "LIGHT",cycle: 240,common_base: 1200,
+            uncommon_base: 1310,rare_base: 1400, mythic_base: 1500, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 19){
+        return {
+            element: "LIGHT",cycle: 240,common_base: 1200,
+            uncommon_base: 1310,rare_base: 1400, mythic_base: 1500, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 20){
+        return {
+            element: "LIGHT",cycle: 312,common_base: 1600,
+            uncommon_base: 1710,rare_base: 1800, mythic_base: 2000, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 21){
+        return {
+            element: "LIGHT",cycle: 312,common_base: 1600,
+            uncommon_base: 1710,rare_base: 1800, mythic_base: 2000, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 22){
+        return {
+            element: "PARASITE",cycle: 168,common_base: 1300,
+            uncommon_base: 1410,rare_base: 1500, mythic_base: 1650, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 23){
+        return {
+            element: "PARASITE",cycle: 168,common_base: 1300,
+            uncommon_base: 1410,rare_base: 1500, mythic_base: 1650, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 24){
+        return {
+            element: "PARASITE",cycle: 168,common_base: 1300,
+            uncommon_base: 1410,rare_base: 1500, mythic_base: 1650, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 25){
+        return {
+            element: "METAL",cycle: 336,common_base: 3500,
+            uncommon_base: 4300,rare_base: 4800, mythic_base: 5200, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 26){
+        return {
+            element: "METAL",cycle: 336,common_base: 3500,
+            uncommon_base: 4300,rare_base: 4800, mythic_base: 5200, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 27){
+        return {
+            element: "METAL",cycle: 480,common_base: 5500,
+            uncommon_base: 6400,rare_base: 6800, mythic_base: 7100, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 28){
+        return {
+            element: "METAL",cycle: 480,common_base: 5500,
+            uncommon_base: 6400,rare_base: 6800, mythic_base: 7100, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 29){
+        return {
+            element: "ICE",cycle: 96,common_base: 800,
+            uncommon_base: 910,rare_base: 1000, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 30){
+        return {
+            element: "FIRE",cycle: 72,common_base: 650,
+            uncommon_base: 760,rare_base: 900, mythic_base: 1100, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 31){
+        return {
+            element: "DARK",cycle: 192,common_base: 1200,
+            uncommon_base: 1900,rare_base: 2300, mythic_base: 2500, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 32){
+        return {
+            element: "ELETRIC",cycle: 60,common_base: 650,
+            uncommon_base: 760,rare_base: 900, mythic_base: 1100, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 33){
+        return {
+            element: "DARK",cycle: 216,common_base: 1400,
+            uncommon_base: 2100,rare_base: 2500, mythic_base: 2800, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 34){
+        return {
+            element: "ELETRIC",cycle: 60,common_base: 650,
+            uncommon_base: 760,rare_base: 900, mythic_base: 1100, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 35){
+        return {
+            element: "DARK",cycle: 216,common_base: 1400,
+            uncommon_base: 2100,rare_base: 2500, mythic_base: 2800, le_factor: 10
+        }
+    }
+
+    if (plantIdNumber == 36){
+        return {
+            element: "WATER",cycle: 108,common_base: 950,
+            uncommon_base: 1100,rare_base: 1200, mythic_base: 1400, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 37){
+        return {
+            element: "WIND",cycle: 96,common_base: 900,
+            uncommon_base: 1010,rare_base: 1100, mythic_base: 1250, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 38){
+        return {
+            element: "WATER",cycle: 120,common_base: 1050,
+            uncommon_base: 1200,rare_base: 1300, mythic_base: 1500, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 39){
+        return {
+            element: "WATER",cycle: 120,common_base: 1050,
+            uncommon_base: 1200,rare_base: 1300, mythic_base: 1500, le_factor: 1
+        }
+    }
+
+    if (plantIdNumber == 90){
+        return {
+            element: "FIRE",cycle: 48,common_base: 750,
+            uncommon_base: 1100,rare_base: 1300, mythic_base: 1500, le_factor: 5
+        }
+    }
+
+    if (plantIdNumber == 91){
+        return {
+            element: "LIGHT",cycle: 240,common_base: 1400,
+            uncommon_base: 1750,rare_base: 1940, mythic_base: 2120, le_factor: 5
+        }
+    }
+
+    if (plantIdNumber == 92){
+        return {
+            element: "ICE",cycle: 96,common_base: 1050,
+            uncommon_base: 1400,rare_base: 1600, mythic_base: 1800, le_factor: 5
+        }
+    }
+
+    if (plantIdNumber == 93){
+        return {
+            element: "DARK",cycle: 216,common_base: 2600,
+            uncommon_base: 2950,rare_base: 3100, mythic_base: 3300, le_factor: 5
+        }
+    }
+
+    return pvuDataInformation
 }
 
 const contractReadAndSellAuction = new web3.eth.Contract(abiReadAndSellAuction, addressReadAndSellAuction)
@@ -167,7 +454,7 @@ const getPlantId = async function (tokenId, price, transaction) {
 const getPlantInformations = async function (plantId, price, tokenId, transaction) {
     let realPrice = parsePrice(price)
     let plantPvuIdNumber = getPlantPvuIdNumber(plantId)
-    let pvuDataInformation = await getPvuDataInformation(plantPvuIdNumber)
+    let pvuDataInformation = getPvuDataInformation(plantPvuIdNumber)
 
     let plantPvuTypeNumber = getPlantPvuTypeNumber(plantId)
     let plantPvuRarityNumber = getPlantPvuRarityNumber(plantId)
@@ -201,6 +488,7 @@ const getPlantInformations = async function (plantId, price, tokenId, transactio
     informations = await analyzeNFT(informations)
 
     // buyNFT(informations)
+    // console.log(informations)
 
     if (informations.buy === true && informations.reseller_price != null && informations.reseller_price > 0) {
         buyNFT(informations, transaction)
@@ -241,8 +529,8 @@ async function buyNFT(informations, transaction) {
         // target address, this could be a smart contract address
         to: contractAddressBid,
         // optional if you want to specify the gas limit
-        gas: web3Bid.utils.toHex(600000),
-        gasPrice: web3Bid.utils.toHex(await web3Bid.utils.toWei('5', 'gwei')),
+        gas: web3.utils.toHex(600000),
+        gasPrice: web3.utils.toHex(await web3.utils.toWei('6', 'gwei')),
         contractAddress: contractAddressBid,
         // nonce: 58,
         // optional if you are invoking say a payable function
@@ -255,14 +543,14 @@ async function buyNFT(informations, transaction) {
     // let txReceipt = await getTransactionReceipt(transaction.hash)
     // console.log('tx receipt test:', txReceipt)
 
-    const signPromise = web3Bid.eth.accounts.signTransaction(tx, privateKeyAccountBid);
+    const signPromise = web3.eth.accounts.signTransaction(tx, privateKeyAccountBid);
 
     signPromise.then((signedTx) => {
         console.log(signedTx)
         // raw transaction string may be available in .raw or
         // .rawTransaction depending on which signTransaction
         // function was called
-        let sentTx = web3Bid.eth.sendSignedTransaction(signedTx.rawTransaction);
+        let sentTx = web3.eth.sendSignedTransaction(signedTx.rawTransaction);
         sentTx.on("receipt", receipt => {
             console.log('SUCCESS BUY: ', receipt)
             sellNFT(informations)
@@ -290,7 +578,7 @@ async function sellNFT(informations) {
         // target address, this could be a smart contract address
         to: addressReadAndSellAuction,
         // optional if you want to specify the gas limit
-        gas: web3Sell.utils.toHex(300000),
+        gas: web3Sell.utils.toHex(250000),
         gasPrice: web3Sell.utils.toHex(await web3Sell.utils.toWei('5', 'gwei')),
         contractAddress: addressReadAndSellAuction,
         // nonce: 58,
@@ -320,42 +608,249 @@ async function sellNFT(informations) {
     });
 }
 
-async function getBasePriceByElement(element) {
-    let cache = await myCache.get("get_base_price_by_element_" + element)
-
-    if (typeof cache !== "undefined") {
-        console.log('get_base_price_by_element_from_cache')
-        return cache
+function getBasePriceByElementAndRarity(element, rarity) {
+    let basePriceInformation = {
+        price: parseFloat("5"),
+        reseller_price: "10000000000000000000"
     }
 
-    let query = await sequelize
-        .query("SELECT * FROM pvu_element_prices WHERE element = :element;",
-            {
-                type: QueryTypes.SELECT,
-                plain: true,
-                replacements: {element: element},
-                raw: true
+    if (rarity === "COMMON") {
+        if (element === "DARK") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_DARK),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_DARK
             }
-        );
+        }
+        if (element === "LIGHT") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_LIGHT),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_LIGHT
+            }
+        }
+        if (element === "FIRE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_FIRE),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_FIRE
+            }
+        }
+        if (element === "WATER") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_WATER),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_WATER
+            }
+        }
+        if (element === "ICE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_ICE),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_ICE
+            }
+        }
+        if (element === "ELETRIC") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_ELETRIC),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_ELETRIC
+            }
+        }
+        if (element === "METAL") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_METAL),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_METAL
+            }
+        }
+        if (element === "WIND") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_WIND),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_WIND
+            }
+        }
+        if (element === "PARASITE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_COMMON_PARASITE),
+                reseller_price: process.env.RESELLER_PRICE_COMMON_PARASITE
+            }
+        }
+    }
 
-    myCache.set("get_base_price_by_element_" + element, query, 30)
+    if (rarity === "UNCOMMON") {
+        if (element === "DARK") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_DARK),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_DARK
+            }
+        }
+        if (element === "LIGHT") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_LIGHT),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_LIGHT
+            }
+        }
+        if (element === "FIRE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_FIRE),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_FIRE
+            }
+        }
+        if (element === "WATER") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_WATER),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_WATER
+            }
+        }
+        if (element === "ICE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_ICE),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_ICE
+            }
+        }
+        if (element === "ELETRIC") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_ELETRIC),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_ELETRIC
+            }
+        }
+        if (element === "METAL") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_METAL),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_METAL
+            }
+        }
+        if (element === "WIND") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_WIND),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_WIND
+            }
+        }
+        if (element === "PARASITE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_UNCOMMON_PARASITE),
+                reseller_price: process.env.RESELLER_PRICE_UNCOMMON_PARASITE
+            }
+        }
+    }
 
-    return query
+    if (rarity === "RARE") {
+        if (element === "DARK") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_DARK),
+                reseller_price: process.env.RESELLER_PRICE_RARE_DARK
+            }
+        }
+        if (element === "LIGHT") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_LIGHT),
+                reseller_price: process.env.RESELLER_PRICE_RARE_LIGHT
+            }
+        }
+        if (element === "FIRE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_FIRE),
+                reseller_price: process.env.RESELLER_PRICE_RARE_FIRE
+            }
+        }
+        if (element === "WATER") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_WATER),
+                reseller_price: process.env.RESELLER_PRICE_RARE_WATER
+            }
+        }
+        if (element === "ICE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_ICE),
+                reseller_price: process.env.RESELLER_PRICE_RARE_ICE
+            }
+        }
+        if (element === "ELETRIC") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_ELETRIC),
+                reseller_price: process.env.RESELLER_PRICE_RARE_ELETRIC
+            }
+        }
+        if (element === "METAL") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_METAL),
+                reseller_price: process.env.RESELLER_PRICE_RARE_METAL
+            }
+        }
+        if (element === "WIND") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_WIND),
+                reseller_price: process.env.RESELLER_PRICE_RARE_WIND
+            }
+        }
+        if (element === "PARASITE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_RARE_PARASITE),
+                reseller_price: process.env.RESELLER_PRICE_RARE_PARASITE
+            }
+        }
+    }
+
+    if (rarity === "MYTHIC") {
+        if (element === "DARK") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_DARK),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_DARK
+            }
+        }
+        if (element === "LIGHT") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_LIGHT),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_LIGHT
+            }
+        }
+        if (element === "FIRE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_FIRE),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_FIRE
+            }
+        }
+        if (element === "WATER") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_WATER),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_WATER
+            }
+        }
+        if (element === "ICE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_ICE),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_ICE
+            }
+        }
+        if (element === "ELETRIC") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_ELETRIC),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_ELETRIC
+            }
+        }
+        if (element === "METAL") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_METAL),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_METAL
+            }
+        }
+        if (element === "WIND") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_WIND),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_WIND
+            }
+        }
+        if (element === "PARASITE") {
+            return {
+                price: parseFloat(process.env.BUY_PRICE_MYTHIC_PARASITE),
+                reseller_price: process.env.RESELLER_PRICE_MYTHIC_PARASITE
+            }
+        }
+    }
+
+    return basePriceInformation
 }
 
 
 async function analyzeNFT(informations) {
-    let basePriceInformation = await getBasePriceByElement(informations.plant_type)
+    let basePriceInformation = getBasePriceByElementAndRarity(informations.plant_type, informations.rarity)
     let basePrice = basePriceInformation ? basePriceInformation.price : 10
 
     informations.reseller_price = basePriceInformation.reseller_price
-
-    // if (informations.status == 1 && informations.pvu_price <= basePrice && informations.pvu_le_hour_price <= 8
-    //     && informations.hour <= 360 && informations.rent >= 0.15 && informations.plant_type == 'DARK'
-    // ) {
-    //     informations.discord_alert = 1
-    //     informations.buy = false
-    // }
 
     if (informations.status == 1 && informations.pvu_price <= basePrice && informations.plant_type == 'DARK'
     ) {
